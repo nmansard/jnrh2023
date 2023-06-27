@@ -14,7 +14,7 @@ with:
    a the robot acceleration
    q^* an arbitrary reference configuration
    integral a numerical integration step (Euler implicit) for the acceleration
-   acc(x,a) the acceleration of the tip of the robot (3d cartesian quantity)
+   acc(x,a) the acceleration of the tip of the robot (3d / 6d cartesian quantity)
    and PD(x,K) is a corrector for the contact dynamics, with K its stifness parameters.
 
 The following tools are used:
@@ -33,7 +33,8 @@ from pinocchio import casadi as cpin
 import example_robot_data as robex
 from scipy.optimize import fmin_bfgs
 from numpy.linalg import norm
-
+from collections import namedtuple
+from types import SimpleNamespace
 from utils.meshcat_viewer_wrapper import MeshcatVisualizer
 
 # Change numerical print
@@ -46,6 +47,11 @@ T = 50
 DT = .002
 w_vel = .1
 w_conf = 5
+#Contact = namedtuple('Contact', ['id', 'name', 'type', 'viz' ])
+contacts = [ SimpleNamespace(name='left_sole_link', type=pin.ContactType.CONTACT_6D) ]
+toolFrameName = 'right_sole_link'
+# Baumgart correction
+Kp = 200; Kv = 2*np.sqrt(Kp)
 
 # --- Load robot model
 robot = robex.load('talos_legs')
@@ -58,19 +64,22 @@ print("Let's go to pdes ... with casadi")
 # The pinocchio model is what we are really interested by.
 model = robot.model
 data = model.createData()
-idTool = model.getFrameId('left_sole_link')
-idElb = model.getFrameId('right_sole_link')
+idTool = model.getFrameId(toolFrameName)
+for c in contacts:
+    c.id = model.getFrameId(c.name)
+    assert(c.id<len(model.frames))
 
 # --- Add box to represent target
 # Add a vizualization for the target
 boxID = "world/box"
 viz.addBox(boxID, [.05, .1, .2], [1., .2, .2, .5])
-# %jupyter_snippet 1
 # Add a vizualisation for the tip of the arm.
 tipID = "world/blue"
 viz.addBox(tipID, [.08] * 3, [.2, .2, 1., .5])
-elbowID = "world/yellow"
-viz.addSphere(elbowID, [.07], [.8, .8, .2, .5])
+for c in contacts:
+    c.viz =  f"world/contact_{c.name}"
+    viz.addSphere(c.viz, [.07], [.8, .8, .2, .5])
+
 def displayScene(q,dt=1e-1):
     '''
     Given the robot configuration, display:
@@ -82,7 +91,8 @@ def displayScene(q,dt=1e-1):
     M = data.oMf[idTool]
     viz.applyConfiguration(boxID, Mtarget)
     viz.applyConfiguration(tipID, M)
-    viz.applyConfiguration(elbowID, data.oMf[idElb])
+    for c in contacts:
+        viz.applyConfiguration(c.viz, data.oMf[c.id])
     viz.display(q)
     time.sleep(dt)
 def displayTraj(qs,dt=1e-2):
@@ -108,7 +118,6 @@ cpin.forwardKinematics(cmodel,cdata,cq,cv,caq)
 cpin.updateFramePlacements(cmodel,cdata)
 # Get initial contact position
 pin.framesForwardKinematics(model,data,robot.q0)
-p0 = data.oMf[idTool].translation.copy()
 
 cintegrate = casadi.Function('integrate',[cx,cdx],
                              [ casadi.vertcat(cpin.integrate(cmodel,cx[:nq],cdx[:nv]),
@@ -118,17 +127,33 @@ cnext = casadi.Function('next', [cx,caq],
                                           cx[nq:] + caq*DT ) ])
 
 error_tool = casadi.Function('etool3', [cx],
-                             [ cdata.oMf[idElb].translation - Mtarget.translation ])
+                             [ cdata.oMf[idTool].translation - Mtarget.translation ])
 
-dpcontact = casadi.Function('dpacontact', [cx],
-                           [ -(cdata.oMf[idTool].inverse().act(casadi.SX(p0))) ])
-vcontact = casadi.Function('vcontact', [cx],
-                           [cpin.getFrameVelocity( cmodel,cdata,idTool,
-                                                   pin.LOCAL ).linear])
-acontact = casadi.Function('acontact', [cx,caq],
-                           [cpin.getFrameClassicalAcceleration( cmodel,cdata,idTool,
-                                                                pin.LOCAL ).linear])
+dpcontacts = {}
+vcontacts = {}
+acontacts = {}
 
+for c in contacts:
+    if c.type == pin.ContactType.CONTACT_3D:
+        p0 = data.oMf[c.id].translation.copy()
+        dpcontacts[c.name] = casadi.Function(f'dpcontact_{c.name}', [cx],
+                                             [ -(cdata.oMf[c.id].inverse().act(casadi.SX(p0))) ])
+        vcontacts[c.name] = casadi.Function(f'vcontact_{c.name}', [cx],
+                                            [cpin.getFrameVelocity( cmodel,cdata,c.id,
+                                                                    pin.LOCAL ).linear])
+        acontacts[c.name] = casadi.Function(f'acontact_{c.name}', [cx,caq],
+                                            [cpin.getFrameClassicalAcceleration( cmodel,cdata,c.id,
+                                                                                 pin.LOCAL ).linear])
+    elif c.type == pin.ContactType.CONTACT_6D:
+        p0 = data.oMf[c.id]
+        dpcontacts[c.name] = casadi.Function(f'dpcontact_{c.name}',[cx],
+                                             [np.zeros(6)])
+        vcontacts[c.name] = casadi.Function(f'vcontact_{c.name}', [cx],
+                                            [cpin.getFrameVelocity( cmodel,cdata,c.id,
+                                                                    pin.LOCAL ).vector])
+        acontacts[c.name] = casadi.Function(f'acontact_{c.name}', [cx,caq],
+                                            [cpin.getFrameAcceleration( cmodel,cdata,c.id,
+                                                                        pin.LOCAL ).vector])
 
 ### PROBLEM
 opti = casadi.Opti()
@@ -146,9 +171,10 @@ for t in range(T):
     totalcost += 1e-4 * DT * casadi.sumsqr( var_as[t] )
     
     opti.subject_to( cnext(var_xs[t],var_as[t]) == var_xs[t+1] )
-    Kp = 100
-    Kv = 2*np.sqrt(Kp)
-    opti.subject_to( acontact(var_xs[t],var_as[t]) + Kv* vcontact(var_xs[t]) + Kp * dpcontact(var_xs[t]) == 0)
+    for c in contacts:
+        correction = Kv* vcontacts[c.name](var_xs[t]) + Kp * dpcontacts[c.name](var_xs[t])
+        opti.subject_to( acontacts[c.name](var_xs[t],var_as[t])
+                         == -correction)
 
 totalcost += 1e4 * casadi.sumsqr( error_tool(var_xs[T]) )
 
@@ -178,22 +204,25 @@ displayScene(robot.q0,1)
 displayTraj([ x[:nq] for x in sol_xs],DT)
 
 
-pcontacts = []
-vcontacts = []
-acontacts = []
+# Plotting the contact gaps
+h_pcontacts = []
+h_vcontacts = []
+h_acontacts = []
 for t in range(T):
     x=sol_xs[t]; q=x[:nq]; v=x[nq:]; a=sol_as[t]
-    pin.forwardKinematics(model,data,q,v,a)
-    pin.updateFramePlacements(model,data)
-    pcontacts.append( data.oMf[idTool].translation.copy() )
-    vcontacts.append( pin.getFrameVelocity(model,data,idTool,pin.LOCAL).linear )
-    acontacts.append( pin.getFrameClassicalAcceleration(model,data,idTool,pin.LOCAL).linear )
+    h_pcontacts.append( np.concatenate([ opti.value(dpcontacts[c.name](var_xs[t]))
+                                         for c in contacts ]) )
+    h_vcontacts.append( np.concatenate([ opti.value(vcontacts[c.name](var_xs[t]))
+                                         for c in contacts ]) )
+    h_acontacts.append( np.concatenate([ opti.value(acontacts[c.name](var_xs[t],var_as[t]))
+                                         for c in contacts ]) )
+    
     
 import matplotlib.pylab as plt; plt.ion()
 fig,ax=plt.subplots(2,1,figsize=(6,6))
-ax[0].plot([p-pcontacts[0] for p in pcontacts])
+ax[0].plot(h_pcontacts)
 ax[0].set_title('delta position')
 ax[0].axis((-2.45, 51.45, -.5e-3, .5e-3))
-ax[1].plot(vcontacts)
+ax[1].plot(h_vcontacts)
 ax[1].set_title('velocity')
 ax[1].axis((-2.45, 51.45, -0.006627568040194312, 0.007463128239663308))
