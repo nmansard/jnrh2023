@@ -20,7 +20,7 @@ import casadi
 import numpy as np
 import example_robot_data as robex
 import matplotlib.pyplot as plt; plt.ion()
-from pinocchio.visualize import GepettoVisualizer
+from utils.meshcat_viewer_wrapper import MeshcatVisualizer
 
 ### HYPER PARAMETERS
 # Hyperparameters defining the optimal control problem.
@@ -30,43 +30,23 @@ costWeightsRunning = np.array([])  # sin, 1-cos, y, ydot, thdot, f
 costWeightsTerminal = np.array([])
 
 ### LOAD AND DISPLAY PENDULUM
-# Load the robot model from example robot data and display it if possible in Gepetto-viewer
+# Load the robot model from example robot data
 robot = robex.load('ur10')
-viz = GepettoVisualizer(robot.model,robot.collision_model,robot.visual_model)
-viz.initViewer()
-viz.loadViewerModel()
+viz = MeshcatVisualizer(robot)
+viz.display(robot.q0)
 
-# The pinocchio model is what we are really interested by.
-model = robot.model
-data = model.createData()
-idTool = model.getFrameId('tool0')
-x0 = np.concatenate([q0,np.zeros(model.nv)])
-target = np.array([  .4,.0,.4 ])
-target = np.array([  -.4,.0,.2 ])
-model.armature = np.array([.5]*6)
-gv = viz.viewer.gui
-gv.addSphere("world/target", 0.05, [1.0, 0, 0, 1])
-gv.applyConfiguration("world/target", target.tolist() + [1, 0, 0, 0])
-gv.refresh()
-
-
-
-for g in robot.collision_model.geometryObjects:
-    viz.viewer.gui.setVisibility(viz.getViewerNodeName(g,pin.VISUAL), 'OFF')
-
-g = robot.collision_model.geometryObjects[2]
-gv.setVisibility(viz.getViewerNodeName(g,pin.COLLISION), 'ON')
+g = robot.collision_model.geometryObjects[4]
 vert = g.geometry.vertices()
 
 NS = 30
 for i in  np.arange(0,vert.shape[0]):
-    gv.addSphere(f'world/point_{i}',5e-3,[1,0,0,0.8] if i % NS == 0 else [.3,.3,1,.1])
-    gv.applyConfiguration(f'world/point_{i}',vert[i].tolist()+[1,0,0,0])
+    pass
+    #gv.addSphere(f'world/point_{i}',5e-3,[1,0,0,0.8] if i % NS == 0 else [.3,.3,1,.1])
+    #gv.applyConfiguration(f'world/point_{i}',vert[i].tolist()+[1,0,0,0])
+    viz.addSphere(f'world/point_{i}',5e-3,[1,0,0,0.8] if i % NS == 0 else [.3,.3,1,.1])
+    viz.applyConfiguration(f'world/point_{i}',vert[i].tolist()+[1,0,0,0])
 
-gv.applyConfiguration(viz.getViewerNodeName(g,pin.COLLISION),[0,.1,0,1,0,0,0])
-gv.refresh()
-    
-
+### CASADI
 cw = casadi.SX.sym('w',3)
 exp = casadi.Function('exp3',[cw], [cpin.exp3(cw)])
 
@@ -89,11 +69,11 @@ var_c = opti.variable(3)
 
 # The ellipsoid matrix is represented by w=log3(R),diag(P) with R,P=eig(A)
 R = exp(var_w)
-A = R.T@casadi.diag(1/var_r**2)@R
+A = R@casadi.diag(1/var_r**2)@R.T
 
 
 totalcost = var_r[0]*var_r[1]*var_r[2]
-opti.subject_to( var_r >= 0.1)
+opti.subject_to( var_r >= 0)
 
 NS = 30 # Subsample rate
 for i in  np.arange(0,vert.shape[0],NS):
@@ -108,13 +88,16 @@ opti.set_initial(var_r,.1)
 sol = opti.solve_limited()
 
 sol_r = opti.value(var_r)
-opti_A = opti.value(A)
-opti_c = opti.value(var_c)
-
+sol_A = opti.value(A)
+sol_c = opti.value(var_c)
+sol_R = opti.value(exp(var_w))
+M = pin.SE3(sol_R,sol_c)
 
 from utils.plot_ellipse import plotEllipse,plotVertices
 fig,ax = plt.subplots(1,subplot_kw={'projection':'3d'})
-plotEllipse(ax,opti_A,opti_c)
+plotEllipse(ax,sol_A,sol_c)
 plotVertices(ax,vert,NS)
 
 
+viz.addEllipsoid('el',sol_r,[.3,.9,.3,.3])
+viz.applyConfiguration('el',M)
