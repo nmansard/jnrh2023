@@ -1,0 +1,52 @@
+
+0. Intro 
+    - qqs slides de Justin, recommandation de minimiser les informations theoriques, pour presenter l interet de pinocchio
+    - tuto buildfromurdf: notebook par Guilhem, animation par Olivier  0_load_your_urdf.ipynb
+
+
+1. Geometry
+
+- cours au tableau par Nicolas (15'optimiste, recommandation de Justin de ne pas negliger cette partie)
+- exo de geom inverse par diff finies avec scipy  1_simplistic_inverse_geometry.ipynb
+- exo de geom inverse avec casad  
+
+2. optim de traj
+
+- cours au tableau ou par slide de nicolas sur la vitesse se(3) les reperes LWA etc (15min)
+- cours slides sur l'optim de traj (tres rapidement) par Nicolas (15min)
+- exo d'optim de sequence de configuration min_q0...qT  2_trajopt_geom.ipynb
+- exo d'optim de traj q,v,a avec contrainte de contact (Nicolas)
+
+3. simu de contact
+- cours slide de Justin 45'
+- exo pin.constraintdynamics de nicolas 45' 3_trajopt_dyn.ipnb
+
+
+4. collision
+- cours GJK de Louis 30'
+-  exo collision ellipse englobante Nicolas 1h 4_collisions.ipynb
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+cinematique inverse (chercher q tel que f(q) = fdes) avec un solveur simple, par exemple par difference finie
+
+    le meme probleme avec casadi et ipopt, puis des variations de ce probleme (par exemple, generation de posture)
+
+    optimisation de trajectoire avec casadi et ipopt, sans dynamique
+
+    un probleme avec dynamique, peut etre optim de traj dynamique
+
+    un probleme avec des volumes, peut etre optimisation de placement de capsule englobante (cherche M \in SE(3) tq forall p in geom.vertices(), dist(p, M) < radius)

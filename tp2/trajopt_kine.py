@@ -41,8 +41,6 @@ robot.q0 = q0
 # Open the viewer
 viz = MeshcatVisualizer(robot)
 viz.display(robot.q0)
-time.sleep(.3)
-print("Let's go to pdes ... with casadi")
 
 # The pinocchio model is what we are really interested by.
 model = robot.model
