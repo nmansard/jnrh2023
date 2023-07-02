@@ -1,0 +1,3 @@
+def displayTraj(qs,dt=1e-2):
+    for q in qs[1:]:
+        displayScene(q,dt=dt)

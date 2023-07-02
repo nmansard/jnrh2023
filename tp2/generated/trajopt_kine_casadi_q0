@@ -1,0 +1,1 @@
+opti.subject_to(var_qs[0] == robot.q0)

@@ -1,0 +1,1 @@
+totalcost += w_term * casadi.sumsqr( error_tool(var_qs[T]) )
