@@ -63,6 +63,10 @@ class MeshcatVisualizer(PMV):
         material = materialFromColor(color)
         self.viewer[name].set_object(meshcat.geometry.Box(dims), material)
 
+    def addEllipsoid(self, name, dims, color):
+        material = materialFromColor(color)
+        self.viewer[name].set_object(meshcat.geometry.Ellipsoid(dims), material)
+
     def applyConfiguration(self, name, placement):
         if isinstance(placement, list) or isinstance(placement, tuple):
             placement = np.array(placement)
