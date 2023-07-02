@@ -1,15 +1,21 @@
 '''
 Implement and solve the following nonlinear program:
-decide q_0 ... q_T \in R^NQxT
-minimizing   sum_t || q_t - q_t+1 ||**2 + || log( M(q_T)^-1 M^* ||^2 
-so that q_0 = robot.q0
-with M(q) \in SE(3) the placement of the robot end-effector, and M^* the target.
+decide q \in R^NQ
+minimizing   sum_t || q - robot.q0 ||**2
+so that 
+      h(q) = target
+      forall obstacles o,    (e_p - e_c)' e_A (e_p-e_c) >= 1
+with h(q) the forward geometry (position of end effector) to be at target position,
+e_A,e_c the ellipse matrix and center in the attached joint frame e_, and e_p = oMe^-1 o_p
+the position of the obstacle point p in frame e_. 
 
 The following tools are used:
 - the ur10 model (loaded by example-robot-data)
 - pinocchio.casadi for writing the problem and computing its derivatives
 - the IpOpt solver wrapped in casadi
 - the meshcat viewer
+
+It assumes that the ellipses parameters are already computed, see ellipses.py for that.
 '''
 
 import time
@@ -19,7 +25,6 @@ import pinocchio as pin
 import casadi
 from pinocchio import casadi as cpin
 import example_robot_data as robex
-from scipy.optimize import fmin_bfgs
 from numpy.linalg import norm
 from types import SimpleNamespace
 
@@ -31,8 +36,11 @@ np.set_printoptions(precision=2, linewidth=300, suppress=True,threshold=1e6)
 
 ### HYPER PARAMETERS
 Mtarget = pin.SE3(pin.utils.rotate('y', 3), np.array([-0.8, -0.1, 0.2]))  # x,y,z
-q0 = np.array([ 0.31, -3.79,  7.64,  1.06,  1.72,  1.  ])
+q0 = np.array([ 0.5, -3.77,  7.67,  1.11,  1.  ,  1.  ])
+q0 = np.array([ 0,5,3,0,2,0 ])
 
+
+# These values are computed using ellipse.py
 ellipses = [
     SimpleNamespace(name="shoulder_lift_joint",
                     A=np.array([[75.09157846,  0.34008563, -0.08817025],
@@ -55,13 +63,11 @@ ellipses = [
                                 [-1.12998357e-02, -1.40077876e+01,  2.19132854e+02]]),
                     center=np.array([-2.64650554e-06,  6.27960760e-03,  1.11112087e-01])),
 ]
-ellipses = ellipses[:1]
 
+# Obstacle positions are arbitrary. Their radius is meaningless, just for visualization.
 obstacles = [
-    SimpleNamespace(radius=.01, pos=np.array([-.4,.10,z]),name=f"obs_{iz}")
-    #for z in [-.14]
-    for iz,z in enumerate(np.arange(-.5,.5,.03))
-    #for z in np.arange(-.1,.1,.05)
+    SimpleNamespace(radius=.01, pos=np.array([-.4,0.2+s,0.5]),name=f"obs_{i_s}")
+    for i_s,s in enumerate(np.arange(-.5,.5,.1))
 ]
 
 # --- Load robot model
@@ -116,91 +122,67 @@ displayScene(robot.q0)
 
 q = robot.q0
                     
-#for y in np.arange(-.5,.5,.01):
-for y in reversed(np.arange(-.3,.2,.01)):
-#for y in [-.05,0]:
-#for y in [0]:
-    for o in obstacles:
-        o.pos[1] = y
+# --- Casadi helpers
+cmodel = cpin.Model(model)
+cdata = cmodel.createData()
 
-    # --- Casadi helpers
-    cmodel = cpin.Model(model)
-    cdata = cmodel.createData()
-    
-    cq = casadi.SX.sym("q",model.nq,1)
-    cpin.framesForwardKinematics(cmodel,cdata,cq)
-    pos_tool = casadi.Function('ptool', [cq], [ cdata.oMf[idTool].translation ])
-    error_tool = casadi.Function('etool', [cq],
-                                 [ cpin.log6(cdata.oMf[idTool].inverse() * cpin.SE3(Mtarget)).vector ])
-    error_tool = casadi.Function('etool', [cq],
-                                 [ cdata.oMf[idTool].translation - Mtarget.translation ])
-    
-    cpos = casadi.SX.sym('p',3)
-    for e in ellipses:
-        e.e_pos = [  casadi.Function(f"e{e.id}_pos_{o.name}",[cq],
-                                     [ cdata.oMi[e.id].inverse().act(casadi.SX(o.pos)) ])
-                     for o in obstacles ]
-        
-        e.oMe = [  casadi.Function(f"oMe_{o.name}",[cq],
-                                   [ cdata.oMi[e.id].homogeneous ])
-                   for o in obstacles ]
-        e.o_p = [  casadi.Function(f"op_{o.name}",[cq],
-                                   [ casadi.SX(o.pos) ])
-                   for o in obstacles ]
+cq = casadi.SX.sym("q",model.nq,1)
+cpin.framesForwardKinematics(cmodel,cdata,cq)
+pos_tool = casadi.Function('ptool', [cq], [ cdata.oMf[idTool].translation ])
+error_tool = casadi.Function('etool', [cq],
+                             [ cpin.log6(cdata.oMf[idTool].inverse() * cpin.SE3(Mtarget)).vector ])
+error_tool = casadi.Function('etool', [cq],
+                             [ cdata.oMf[idTool].translation - Mtarget.translation ])
 
-    opti = casadi.Opti()
-    var_q = opti.variable(model.nq)
-    totalcost = casadi.sumsqr( var_q - robot.q0 )
-    opti.subject_to( error_tool(var_q) == 0 )
+cpos = casadi.SX.sym('p',3)
+for e in ellipses:
+    e.e_pos = [  casadi.Function(f"e{e.id}_pos_{o.name}",[cq],
+                                 [ cdata.oMi[e.id].inverse().act(casadi.SX(o.pos)) ])
+                 for o in obstacles ]
 
-    for e in ellipses:
-        for (io,o) in enumerate(obstacles):
-            # obstacle position in ellipsoid (joint) frame
-            # e_pos = e.e_pos(var_q,o.pos)
-            opti.subject_to( (e.e_pos[io](var_q)-e.center).T@e.A@(e.e_pos[io](var_q)-e.center) >=1 )
+    e.oMe = [  casadi.Function(f"oMe_{o.name}",[cq],
+                               [ cdata.oMi[e.id].homogeneous ])
+               for o in obstacles ]
+    e.o_p = [  casadi.Function(f"op_{o.name}",[cq],
+                               [ casadi.SX(o.pos) ])
+               for o in obstacles ]
 
-    ### SOLVE
-    opti.minimize(totalcost)
-    p_opts = dict(print_time=False, verbose=False)
-    s_opts = dict(print_level=0)
-    #opti.solver("ipopt", p_opts, s_opts)
-    opti.solver("ipopt") # set numerical backend
-    #opti.callback(lambda i: displayScene(opti.debug.value(var_q)))
-    opti.set_initial(var_q,q)
+opti = casadi.Opti()
+var_q = opti.variable(model.nq)
+totalcost = casadi.sumsqr( var_q - robot.q0 )
+#opti.subject_to( error_tool(var_q) == 0 )
+totalcost = casadi.sumsqr(error_tool(var_q))
 
+for e in ellipses:
+    for (io,o) in enumerate(obstacles):
+        # obstacle position in ellipsoid (joint) frame
+        # e_pos = e.e_pos(var_q,o.pos)
+        opti.subject_to( (e.e_pos[io](var_q)-e.center).T@e.A@(e.e_pos[io](var_q)-e.center) >=1 )
 
+### SOLVE
+opti.minimize(totalcost)
+p_opts = dict(print_time=False, verbose=False)
+s_opts = dict(print_level=0)
+#opti.solver("ipopt", p_opts, s_opts)
+opti.solver("ipopt") # set numerical backend
+#opti.callback(lambda i: displayScene(opti.debug.value(var_q)))
+opti.set_initial(var_q,q)
 
-    # Caution: in case the solver does not converge, we are picking the candidate values
-    # at the last iteration in opti.debug, and they are NO guarantee of what they mean.
-    try:
-        sol = opti.solve_limited()
-        sol_q = opti.value(var_q)
+# Caution: in case the solver does not converge, we are picking the candidate values
+# at the last iteration in opti.debug, and they are NO guarantee of what they mean.
+try:
+    sol = opti.solve_limited()
+    sol_q = opti.value(var_q)
 
-        q = opti.value(var_q)
-        displayScene(q)
-        time.sleep(1)
+    q = opti.value(var_q)
+    displayScene(q)
+    time.sleep(1)
 
-        dist = [ opti.value((e_pos-e.center).T@e.A@(e_pos-e.center))  for o in obstacles ]
-        dist = np.array(dist)
-        print(y,dist)
-        assert(np.all(dist>=1-1e-6))
-        
-    except:
-        print( 'ERROR IN CONVERGENCE FOR ',y)
+    dist = [ opti.value((e.e_pos[io](var_q)-e.center).T@e.A@(e.e_pos[io](var_q)-e.center))
+             for io,o in enumerate(obstacles) for e in ellipses ]  
+    dist = np.array(dist)
+    print(dist)
+    assert(np.all(dist>=1-1e-6))
 
-
-q=sol_q
-pin.framesForwardKinematics(model,data,q)
-oMe=data.oMi[e.id]
-io=3
-o=obstacles[io]
-
-o_p=o.pos
-e_c=e.center
-e_p=oMe.inverse()*o_p
-o_c=oMe*e_c
-
-viz.addSphere('c',.01,[0,0,1,1])
-viz.addSphere('z',.015,[0,1,0,1])
-viz.applyConfiguration('c',pin.SE3(np.eye(3),o_c))
-viz.applyConfiguration('z',pin.SE3(np.eye(3),o_p))
+except:
+    print( 'ERROR IN CONVERGENCE')
