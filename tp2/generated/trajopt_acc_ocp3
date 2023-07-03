@@ -1,0 +1,2 @@
+opti.subject_to(var_xs[0][:nq] == robot.q0)
+opti.subject_to(var_xs[0][nq:] == 0)

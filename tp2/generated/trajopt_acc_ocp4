@@ -1,0 +1,7 @@
+# Define the contact constraints
+for t in range(T):
+    for c in contacts:
+        #correction = Kv* vcontacts[c.name](var_xs[t]) + Kp * dpcontacts[c.name](var_xs[t])
+        correction = cbaumgart[c.name](var_xs[t])
+        opti.subject_to( acontacts[c.name](var_xs[t],var_as[t])
+                         == -correction)

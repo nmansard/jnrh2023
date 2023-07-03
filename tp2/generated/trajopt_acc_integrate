@@ -1,0 +1,4 @@
+# Sym graph for the integration operation x,dx -> x(+)dx = [model.integrate(q,dq),v+dv]
+cintegrate = casadi.Function('integrate',[cx,cdx],
+                             [ casadi.vertcat(cpin.integrate(cmodel,cx[:nq],cdx[:nv]),
+                                              cx[nq:]+cdx[nv:]) ])
