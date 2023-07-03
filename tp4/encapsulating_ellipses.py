@@ -15,34 +15,36 @@ with A,c the matrix representation of the ellipsoid A=exp(w)@diag(1/r**2)@exp(w)
 
 '''
 
+# %jupyter_snippet import
 import pinocchio as pin
 from pinocchio import casadi as cpin
 import casadi
 import numpy as np
 import example_robot_data as robex
-import matplotlib.pyplot as plt; plt.ion()
 from utils.meshcat_viewer_wrapper import MeshcatVisualizer
+# %end_jupyter_snippet
 
-
+# %jupyter_snippet load
 # --- Load robot model
 robot = robex.load('ur10')
 viz = MeshcatVisualizer(robot)
 viz.display(robot.q0)
+# %end_jupyter_snippet
 
-g = robot.collision_model.geometryObjects[5]
-vert = g.geometry.vertices()
+# %jupyter_snippet vertices
+geom = robot.collision_model.geometryObjects[5]
+vertices = geom.geometry.vertices()
 
-NS = 1 # Subsample rate
-for i in  np.arange(0,vert.shape[0]):
-    pass
-    #gv.addSphere(f'world/point_{i}',5e-3,[1,0,0,0.8] if i % NS == 0 else [.3,.3,1,.1])
-    #gv.applyConfiguration(f'world/point_{i}',vert[i].tolist()+[1,0,0,0])
-    viz.addSphere(f'world/point_{i}',5e-3,[1,0,0,0.8] if i % NS == 0 else [.3,.3,1,.1])
-    viz.applyConfiguration(f'world/point_{i}',vert[i].tolist()+[1,0,0,0])
-
+for i in  np.arange(0,vertices.shape[0]):
+    viz.addSphere(f'world/point_{i}',5e-3,[1,0,0,0.8])
+    viz.applyConfiguration(f'world/point_{i}',vertices[i].tolist()+[1,0,0,0])
+# %end_jupyter_snippet
+    
 ### CASADI
+# %jupyter_snippet helper
 cw = casadi.SX.sym('w',3)
 exp = casadi.Function('exp3',[cw], [cpin.exp3(cw)])
+# %end_jupyter_snippet
 
 ###
 '''
@@ -56,29 +58,41 @@ so that:
   for all points pk in a list,     pk in ellipse
 
 '''
+# %jupyter_snippet vars
 opti = casadi.Opti()
 var_w = opti.variable(3)
 var_r = opti.variable(3)
 var_c = opti.variable(3)
+# %end_jupyter_snippet
 
+# %jupyter_snippet RA
 # The ellipsoid matrix is represented by w=log3(R),diag(P) with R,P=eig(A)
 R = exp(var_w)
 A = R@casadi.diag(1/var_r**2)@R.T
+# %end_jupyter_snippet
 
-
+# %jupyter_snippet cost
 totalcost = var_r[0]*var_r[1]*var_r[2]
-opti.subject_to( var_r >= 0)
+# %end_jupyter_snippet
 
-for i in  np.arange(0,vert.shape[0],NS):
+# %jupyter_snippet rplus
+opti.subject_to( var_r >= 0)
+# %end_jupyter_snippet
+
+# %jupyter_snippet points
+for g_v in vertices:
+    # g_v is the vertex v expressed in the geometry frame.
     # Convert point from geometry frame to joint frame
-    p = g.placement.act(vert[i])
+    j_v = geom.placement.act(g_v)
     # Constraint the ellipsoid to be including the point
-    opti.subject_to( (p-var_c).T@A@(p-var_c)  <= 1  )
+    opti.subject_to( (j_v-var_c).T@A@(j_v-var_c)  <= 1  )
+# %end_jupyter_snippet
 
 ### SOLVE
+# %jupyter_snippet solve
 opti.minimize(totalcost)
 opti.solver("ipopt") # set numerical backend
-opti.set_initial(var_r,.1)
+opti.set_initial(var_r,10)
 
 sol = opti.solve_limited()
 
@@ -86,26 +100,39 @@ sol_r = opti.value(var_r)
 sol_A = opti.value(A)
 sol_c = opti.value(var_c)
 sol_R = opti.value(exp(var_w))
+# %end_jupyter_snippet
 
-from utils.plot_ellipse import plotEllipse,plotVertices
-fig,ax = plt.subplots(1,subplot_kw={'projection':'3d'})
-plotEllipse(ax,sol_A,sol_c)
-plotVertices(ax,np.vstack([g.placement.act(p) for p in vert]),NS)
-
+# Recover r,R from A (for fun)
 e,P = np.linalg.eig(sol_A)
-sol_r = 1/e**.5
-sol_R = P
-M = pin.SE3(sol_R,sol_c)
-viz.addEllipsoid('el',sol_r,[.3,.9,.3,.3])
-viz.applyConfiguration('el',M)
+recons_r = 1/e**.5
+recons_R = P
 
-print(f'SimpleNamespace(name="{robot.model.names[g.parentJoint]}",\n'+
+# %jupyter_snippet meshcat
+# Build the ellipsoid 3d shape
+# Ellipsoid in meshcat
+viz.addEllipsoid('el',sol_r,[.3,.9,.3,.3])
+# jMel is the placement of the ellipsoid in the joint frame
+jMel = pin.SE3(sol_R,sol_c)
+# %end_jupyter_snippet
+
+# %jupyter_snippet vizplace
+# Place the body, the vertices and the ellispod at a random configuration oMj_rand
+oMj_rand = pin.SE3.Random()
+viz.applyConfiguration(viz.getViewerNodeName(geom,pin.VISUAL),oMj_rand)
+for i in  np.arange(0,vertices.shape[0]):
+    viz.applyConfiguration(f'world/point_{i}',
+                           oMj_rand.act(vertices[i]).tolist()+[1,0,0,0])
+viz.applyConfiguration('el',oMj_rand*jMel)
+# %end_jupyter_snippet
+
+# For future use ...
+print(f'SimpleNamespace(name="{robot.model.names[geom.parentJoint]}",\n'+
       f'                A=np.{repr(sol_A)},\n'+
       f'                center=np.{repr(sol_c)})')
 
-
-M0 = pin.SE3.Random()
-for i in  np.arange(0,vert.shape[0]):
-    viz.applyConfiguration(f'world/point_{i}',M0.act(vert[i]).tolist()+[1,0,0,0])
-viz.applyConfiguration(viz.getViewerNodeName(g,pin.VISUAL),M0)
-viz.applyConfiguration('el',M0*M)
+# Matplotlib (for fun)
+import matplotlib.pyplot as plt; plt.ion()
+from utils.plot_ellipse import plotEllipse,plotVertices
+fig,ax = plt.subplots(1,subplot_kw={'projection':'3d'})
+plotEllipse(ax,sol_A,sol_c)
+plotVertices(ax,np.vstack([geom.placement.act(p) for p in vertices]),1)

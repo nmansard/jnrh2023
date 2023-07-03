@@ -1,0 +1,4 @@
+opti = casadi.Opti()
+var_w = opti.variable(3)
+var_r = opti.variable(3)
+var_c = opti.variable(3)

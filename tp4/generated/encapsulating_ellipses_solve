@@ -1,0 +1,10 @@
+opti.minimize(totalcost)
+opti.solver("ipopt") # set numerical backend
+opti.set_initial(var_r,10)
+
+sol = opti.solve_limited()
+
+sol_r = opti.value(var_r)
+sol_A = opti.value(A)
+sol_c = opti.value(var_c)
+sol_R = opti.value(exp(var_w))

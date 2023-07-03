@@ -1,0 +1,6 @@
+geom = robot.collision_model.geometryObjects[5]
+vertices = geom.geometry.vertices()
+
+for i in  np.arange(0,vertices.shape[0]):
+    viz.addSphere(f'world/point_{i}',5e-3,[1,0,0,0.8])
+    viz.applyConfiguration(f'world/point_{i}',vertices[i].tolist()+[1,0,0,0])

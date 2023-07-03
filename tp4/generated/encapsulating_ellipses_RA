@@ -1,0 +1,3 @@
+# The ellipsoid matrix is represented by w=log3(R),diag(P) with R,P=eig(A)
+R = exp(var_w)
+A = R@casadi.diag(1/var_r**2)@R.T

@@ -1,0 +1,2 @@
+cw = casadi.SX.sym('w',3)
+exp = casadi.Function('exp3',[cw], [cpin.exp3(cw)])

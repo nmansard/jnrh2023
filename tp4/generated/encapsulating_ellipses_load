@@ -1,0 +1,4 @@
+# --- Load robot model
+robot = robex.load('ur10')
+viz = MeshcatVisualizer(robot)
+viz.display(robot.q0)

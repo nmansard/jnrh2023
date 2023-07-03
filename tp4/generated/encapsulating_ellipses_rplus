@@ -1,0 +1,1 @@
+opti.subject_to( var_r >= 0)
