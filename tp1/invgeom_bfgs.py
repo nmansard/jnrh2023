@@ -19,15 +19,30 @@ import time
 import unittest
 
 import example_robot_data as robex
+import meshcat_shapes
 import numpy as np
 import pinocchio as pin
 from numpy.linalg import norm
 from scipy.optimize import fmin_bfgs
 
-from utils.meshcat_viewer_wrapper import MeshcatVisualizer
-
 # %end_jupyter_snippet
 
+
+# %jupyter_snippet robot
+robot = robex.load("ur5")
+robot.q0 = np.array([0, -np.pi / 2, 0, 0, 0, 0])
+# %end_jupyter_snippet
+
+# %jupyter_snippet visualizer
+viz = pin.visualize.MeshcatVisualizer(
+    robot.model, robot.collision_model, robot.visual_model
+)
+robot.setVisualizer(viz, init=False)
+robot.setVisualizer(viz, init=False)
+viz.initViewer(open=False)
+viz.loadViewerModel()
+viz.display(robot.q0)
+# %end_jupyter_snippet
 
 # %jupyter_snippet params
 transform_target_to_world = pin.SE3(
@@ -35,29 +50,10 @@ transform_target_to_world = pin.SE3(
 )  # x,y,z
 # %end_jupyter_snippet
 
-# --- Load robot model
-robot = robex.load("ur5")
-robot.q0 = np.array([0, -np.pi / 2, 0, 0, 0, 0])
-
-# Open the viewer
-viz = MeshcatVisualizer(robot)
-viz.display(robot.q0)
-time.sleep(0.3)
-
 # The pinocchio model is what we are really interested by.
 model = robot.model
-data = model.createData()
+data = robot.data
 idTool = model.getFrameId("tool0")
-idElbow = model.getFrameId("elbow_joint")
-
-# --- Add box to represent target
-# Add a vizualization for the target
-boxID = "world/box"
-viz.addBox(boxID, [0.05, 0.1, 0.2], [1.0, 0.2, 0.2, 0.5])
-# %jupyter_snippet 1
-# Add a vizualisation for the tip of the arm.
-tipID = "world/blue"
-viz.addBox(tipID, [0.08] * 3, [0.2, 0.2, 1.0, 0.5])
 
 #
 # OPTIM 6D #########################################################
@@ -75,11 +71,16 @@ def cost(q):
     )
 
 
+# --- Callback for visualization
+viewer = viz.viewer
+meshcat_shapes.frame(viewer["target"], opacity=1.0)
+meshcat_shapes.frame(viewer["current"], opacity=0.5)
+
 def callback(q):
     pin.framesForwardKinematics(model, data, q)
-    M = data.oMf[idTool]
-    viz.applyConfiguration(boxID, transform_target_to_world)
-    viz.applyConfiguration(tipID, M)
+    transform_frame_to_world = data.oMf[idTool]
+    viewer["target"].set_transform(transform_target_to_world.np)
+    viewer["current"].set_transform(transform_frame_to_world.np)
     viz.display(q)
     time.sleep(1e-1)
 
