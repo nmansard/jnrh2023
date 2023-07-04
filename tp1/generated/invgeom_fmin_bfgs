@@ -1,0 +1,7 @@
+qguess = np.array([0.12, -2.2, -1.45, 1.82, -0.95, 0.17])
+qopt = fmin_bfgs(error, qguess, callback=callback)
+
+print(
+    "The robot finally reached effector placement at\n",
+    robot.placement(qopt, 6),
+)

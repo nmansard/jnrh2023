@@ -1,0 +1,6 @@
+tool_id = model.getFrameId("tool0")
+
+transform_target_to_world = pin.SE3(
+    pin.utils.rotate("x", np.pi / 4),
+    np.array([-0.5, 0.1, 0.2]),
+)
