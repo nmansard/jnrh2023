@@ -154,7 +154,6 @@ print(
 # TEST ZONE ############################################################
 # Some asserts below to check the behavior of this script in stand-alone
 
-
 class InvGeom6DTest(unittest.TestCase):
     def test_qopt_6d(self):
         pin.framesForwardKinematics(model, data, qopt)
@@ -178,7 +177,7 @@ class InvGeom6DTest(unittest.TestCase):
 
 InvGeom6DTest().test_qopt_6d()
 
-# == End of test zone ==
+# END OF TEST ZONE ############################################################
 
 # %jupyter_snippet casadi_imports
 import casadi
