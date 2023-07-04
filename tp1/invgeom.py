@@ -191,8 +191,15 @@ cmodel = cpin.Model(model)
 cdata = cmodel.createData()
 # %end_jupyter_snippet
 
-cq = casadi.SX.sym("x", model.nq, 1)
+# %jupyter_snippet cq
+cq = casadi.SX.sym("q", model.nq, 1)
+# %end_jupyter_snippet
+
+# %jupyter_snippet casadi_fk
 cpin.framesForwardKinematics(cmodel, cdata, cq)
+# %end_jupyter_snippet
+
+# %jupyter_snippet casadi_error
 error_tool = casadi.Function(
     "etool",
     [cq],
@@ -202,6 +209,7 @@ error_tool = casadi.Function(
         ).vector
     ],
 )
+# %end_jupyter_snippet
 
 ### PROBLEM
 opti = casadi.Opti()
