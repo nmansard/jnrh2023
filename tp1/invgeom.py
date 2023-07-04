@@ -154,6 +154,7 @@ print(
 # TEST ZONE ############################################################
 # Some asserts below to check the behavior of this script in stand-alone
 
+
 class InvGeom6DTest(unittest.TestCase):
     def test_qopt_6d(self):
         pin.framesForwardKinematics(model, data, qopt)
@@ -185,24 +186,14 @@ from pinocchio import casadi as cpin
 
 # %end_jupyter_snippet
 
-print("CasADi time!!!")
-
+# %jupyter_snippet casadi_model
 cmodel = cpin.Model(model)
 cdata = cmodel.createData()
+# %end_jupyter_snippet
 
 cq = casadi.SX.sym("x", model.nq, 1)
 cpin.framesForwardKinematics(cmodel, cdata, cq)
 pos_tool = casadi.Function("ptool", [cq], [cdata.oMf[tool_id].translation])
-error_tool = casadi.Function(
-    "etool",
-    [cq],
-    [
-        cpin.log6(
-            cdata.oMf[tool_id].inverse() * cpin.SE3(transform_target_to_world)
-        ).vector
-    ],
-)
-
 error_tool = casadi.Function(
     "etool",
     [cq],
