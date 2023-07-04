@@ -57,16 +57,17 @@ Kp = 200; Kv = 2*np.sqrt(Kp)
 # %end_jupyter_snippet
 
 # --- Load robot model
+# %jupyter_snippet talos
 robot = robex.load('talos_legs')
 # Open the viewer
 viz = MeshcatVisualizer(robot)
 viz.display(robot.q0)
-time.sleep(.3)
-print("Let's go to pdes ... with casadi")
 
 # The pinocchio model is what we are really interested by.
 model = robot.model
 data = model.createData()
+# %end_jupyter_snippet
+
 # %jupyter_snippet framesId
 endEffector_ID = model.getFrameId(endEffectorFrameName)
 for c in contacts:
