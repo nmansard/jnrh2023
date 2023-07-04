@@ -1,0 +1,4 @@
+# The pinocchio model is what we are really interested by.
+model = robot.model
+data = model.createData()
+endEffector_ID = model.getFrameId(endEffectorFrameName)

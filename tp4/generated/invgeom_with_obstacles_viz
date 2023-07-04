@@ -1,0 +1,19 @@
+def displayScene(q,dt=1e-1):
+    '''
+    Given the robot configuration, display:
+    - the robot
+    - a box representing endEffector_ID
+    - a box representing Mtarget
+    '''
+    pin.framesForwardKinematics(model,data,q)
+    M = data.oMf[endEffector_ID]
+    viz.applyConfiguration(boxID, Mtarget)
+    viz.applyConfiguration(tipID, M)
+    for e in ellipses:
+        M = data.oMi[e.id]
+        viz.applyConfiguration(f'el_{e.name}',M*e.placement)
+    for io,o in enumerate(obstacles):
+        viz.applyConfiguration(f'obs_{io}',pin.SE3(np.eye(3),o.pos))
+    viz.display(q)
+    time.sleep(dt)
+displayScene(robot.q0)

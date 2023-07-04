@@ -1,0 +1,14 @@
+opti.minimize(totalcost)
+p_opts = dict(print_time=False, verbose=False)
+s_opts = dict(print_level=0)
+opti.solver("ipopt") # set numerical backend
+opti.set_initial(var_q,robot.q0)
+
+# Caution: in case the solver does not converge, we are picking the candidate values
+# at the last iteration in opti.debug, and they are NO guarantee of what they mean.
+try:
+    sol = opti.solve_limited()
+    sol_q = opti.value(var_q)
+except:
+    print('ERROR in convergence, plotting debug info.')
+    sol_q = opti.debug.value(var_q)
