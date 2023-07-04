@@ -27,10 +27,11 @@ from scipy.optimize import fmin_bfgs
 
 # %end_jupyter_snippet
 
-
 # %jupyter_snippet robot
 robot = robex.load("ur5")
 robot.q0 = np.array([0, -np.pi / 2, 0, 0, 0, 0])
+model = robot.model
+data = robot.data
 # %end_jupyter_snippet
 
 # %jupyter_snippet visualizer
@@ -45,28 +46,27 @@ viz.display(robot.q0)
 # %end_jupyter_snippet
 
 # %jupyter_snippet params
+tool_id = model.getFrameId("tool0")
 transform_target_to_world = pin.SE3(
-    pin.utils.rotate("x", np.pi / 4), np.array([-0.5, 0.1, 0.2])
-)  # x,y,z
+    pin.utils.rotate("x", np.pi / 4),
+    np.array([-0.5, 0.1, 0.2]),
+)
 # %end_jupyter_snippet
 
 # The pinocchio model is what we are really interested by.
-model = robot.model
-data = robot.data
-idTool = model.getFrameId("tool0")
 
 #
 # OPTIM 6D #########################################################
 #
 
 
-def cost(q):
+def cost(q: np.ndarray) -> float:
     """Compute score from a configuration"""
     pin.framesForwardKinematics(model, data, q)
-    transform_frame_to_world = data.oMf[idTool]
+    transform_tool_to_world = data.oMf[tool_id]
     return norm(
         pin.log(
-            transform_frame_to_world.inverse() * transform_target_to_world
+            transform_tool_to_world.inverse() * transform_target_to_world
         ).vector
     )
 
@@ -76,9 +76,10 @@ viewer = viz.viewer
 meshcat_shapes.frame(viewer["target"], opacity=1.0)
 meshcat_shapes.frame(viewer["current"], opacity=0.5)
 
-def callback(q):
+
+def callback(q: np.ndarray):
     pin.framesForwardKinematics(model, data, q)
-    transform_frame_to_world = data.oMf[idTool]
+    transform_frame_to_world = data.oMf[tool_id]
     viewer["target"].set_transform(transform_target_to_world.np)
     viewer["current"].set_transform(transform_frame_to_world.np)
     viz.display(q)
@@ -102,7 +103,7 @@ print(
 class InvGeom6DTest(unittest.TestCase):
     def test_qopt_6d(self):
         pin.framesForwardKinematics(model, data, qopt)
-        Mopt = data.oMf[idTool]
+        Mopt = data.oMf[tool_id]
         self.assertTrue(
             (
                 np.abs(
