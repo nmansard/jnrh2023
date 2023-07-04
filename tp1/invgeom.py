@@ -211,15 +211,15 @@ error_tool = casadi.Function(
 )
 # %end_jupyter_snippet
 
-### PROBLEM
+# %jupyter_snippet casadi_computation_graph
 opti = casadi.Opti()
 var_q = opti.variable(model.nq)
-
 totalcost = casadi.sumsqr(error_tool(var_q))
+# %end_jupyter_snippet
 
-### SOLVE
+# %jupyter_snippet ipopt
 opti.minimize(totalcost)
-opti.solver("ipopt")  # set numerical backend
+opti.solver("ipopt")  # select the backend solver
 opti.callback(lambda i: callback(opti.debug.value(var_q)))
 
 # Caution: in case the solver does not converge, we are picking the candidate values
@@ -230,3 +230,11 @@ try:
 except:
     print("ERROR in convergence, plotting debug info.")
     sol_q = opti.debug.value(var_q)
+# %end_jupyter_snippet
+
+# %jupyter_snippet check_final_placement
+print(
+    "The robot finally reached effector placement at\n",
+    robot.placement(sol_q, 6),
+)
+# %end_jupyter_snippet
