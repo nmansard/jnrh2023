@@ -1,0 +1,1 @@
+cq = casadi.SX.sym("q", model.nq, 1)

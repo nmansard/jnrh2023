@@ -1,0 +1,12 @@
+opti.minimize(totalcost)
+opti.solver("ipopt")  # select the backend solver
+opti.callback(lambda i: callback(opti.debug.value(var_q)))
+
+# Caution: in case the solver does not converge, we are picking the candidate values
+# at the last iteration in opti.debug, and they are NO guarantee of what they mean.
+try:
+    sol = opti.solve_limited()
+    sol_q = opti.value(var_q)
+except:
+    print("ERROR in convergence, plotting debug info.")
+    sol_q = opti.debug.value(var_q)

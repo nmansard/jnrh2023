@@ -1,0 +1,3 @@
+import casadi
+from pinocchio import casadi as cpin
+

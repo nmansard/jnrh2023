@@ -1,0 +1,4 @@
+robot = robex.load("ur5")
+robot.q0 = np.array([0, -np.pi / 2, 0, 0, 0, 0])
+model = robot.model
+data = robot.data

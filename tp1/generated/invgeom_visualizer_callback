@@ -1,0 +1,18 @@
+viewer = viz.viewer
+
+# Target frame (immobile)
+meshcat_frame(viewer["target"], opacity=1.0)
+viewer["target"].set_transform(transform_target_to_world.np)
+
+# Tool frame (mobile)
+meshcat_frame(viewer["tool"], opacity=0.5)
+
+
+def callback(q: np.ndarray):
+    pin.framesForwardKinematics(model, data, q)
+    transform_frame_to_world = data.oMf[tool_id]
+    viewer["tool"].set_transform(transform_frame_to_world.np)
+    viz.display(q)
+    time.sleep(1e-1)
+
+

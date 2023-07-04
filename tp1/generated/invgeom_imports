@@ -1,0 +1,10 @@
+import time
+import unittest
+
+import example_robot_data as robex
+import meshcat
+import numpy as np
+import pinocchio as pin
+from numpy.linalg import norm
+from scipy.optimize import fmin_bfgs
+

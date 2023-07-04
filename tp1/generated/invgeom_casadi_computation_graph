@@ -1,0 +1,3 @@
+opti = casadi.Opti()
+var_q = opti.variable(model.nq)
+totalcost = casadi.sumsqr(error_tool(var_q))
