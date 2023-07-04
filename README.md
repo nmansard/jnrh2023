@@ -22,11 +22,11 @@ After this, you have to **choose one of the three** following supported methods:
 
 3. update pip:
 
-    `python -m pip install -U pip`
+    `pip install -U pip`
 
 4. install dependencies:
 
-    `python -m pip install example-robot-data-jnrh2023 jupyterlab meshcat scipy ipywidgets matplotlib`
+    `pip install example-robot-data-jnrh2023 jupyterlab meshcat scipy ipywidgets matplotlib`
 
 5. start `PYTHONPATH=. jupyter-lab`
 
