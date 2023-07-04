@@ -43,7 +43,7 @@ After this, you have to **choose one of the three** following supported methods:
 
 3. activate it :
 
-    `conda activate -n jnrh-2023` (TODO: `python=3.x` ?)
+    `conda activate -n jnrh-2023`
 
 4. install general dependencies:
 
