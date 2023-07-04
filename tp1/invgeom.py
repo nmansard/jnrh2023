@@ -193,7 +193,6 @@ cdata = cmodel.createData()
 
 cq = casadi.SX.sym("x", model.nq, 1)
 cpin.framesForwardKinematics(cmodel, cdata, cq)
-pos_tool = casadi.Function("ptool", [cq], [cdata.oMf[tool_id].translation])
 error_tool = casadi.Function(
     "etool",
     [cq],
@@ -208,9 +207,6 @@ error_tool = casadi.Function(
 opti = casadi.Opti()
 var_q = opti.variable(model.nq)
 
-totalcost = casadi.sumsqr(
-    pos_tool(var_q) - transform_target_to_world.translation
-)
 totalcost = casadi.sumsqr(error_tool(var_q))
 
 ### SOLVE
