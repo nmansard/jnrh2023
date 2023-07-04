@@ -1,0 +1,3 @@
+print("***** Display the resulting trajectory ...")
+displayScene(robot.q0,1)
+displayTraj([ x[:nq] for x in sol_xs],DT)

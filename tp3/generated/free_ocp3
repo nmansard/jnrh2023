@@ -1,0 +1,3 @@
+opti.subject_to(var_xs[0][:nq] == robot.q0)
+opti.subject_to(var_xs[0][nq:] == 0) # zero initial velocity
+opti.subject_to(var_xs[T][nq:] == 0) # zero terminal velocity

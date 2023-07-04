@@ -1,0 +1,25 @@
+# --- Add box to represent target
+# Add a vizualization for the target
+boxID = "world/box"
+viz.addBox(boxID, [.05, .1, .2], [1., .2, .2, .5])
+# Add a vizualisation for the tip of the arm.
+tipID = "world/blue"
+viz.addBox(tipID, [.08] * 3, [.2, .2, 1., .5])
+
+def displayScene(q,dt=1e-1):
+    '''
+    Given the robot configuration, display:
+    - the robot
+    - a box representing endEffector_ID
+    - a box representing Mtarget
+    '''
+    pin.framesForwardKinematics(model,data,q)
+    M = data.oMf[endEffector_ID]
+    viz.applyConfiguration(boxID, Mtarget)
+    viz.applyConfiguration(tipID, M)
+    viz.display(q)
+    time.sleep(dt)
+def displayTraj(qs,dt=1e-2):
+    for q in qs[1:]:
+        displayScene(q,dt=dt)
+displayScene(robot.q0)

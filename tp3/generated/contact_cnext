@@ -1,0 +1,4 @@
+# Sym graph for the integration operation x' = [ q+vDT+aDT**2, v+aDT ]
+cnext = casadi.Function('next', [cx,caq],
+                        [ casadi.vertcat( cpin.integrate(cmodel,cx[:nq],cx[nq:]*DT + caq*DT**2),
+                                          cx[nq:] + caq*DT ) ])

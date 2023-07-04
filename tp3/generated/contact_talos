@@ -1,0 +1,8 @@
+robot = robex.load('talos_legs')
+# Open the viewer
+viz = MeshcatVisualizer(robot)
+viz.display(robot.q0)
+
+# The pinocchio model is what we are really interested by.
+model = robot.model
+data = model.createData()

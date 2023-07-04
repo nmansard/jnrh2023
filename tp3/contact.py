@@ -56,8 +56,7 @@ w_conf = 5
 # %end_jupyter_snippet
 # %jupyter_snippet contact_solver
 # Baumgart correction
-Kv = 20; Kp = 0#Kv**2/4
-Kp = 0; Kv = 2*np.sqrt(Kp)
+Kv = 20; Kp = 0
 # Tuning of the proximal solver (minimal version)
 prox_settings = pin.ProximalSettings(0,1e-6,1)
 # %end_jupyter_snippet
@@ -85,7 +84,7 @@ for c in contacts:
 contact_models = [ c.model for c in contacts ] 
 # %end_jupyter_snippet
 
-# %jupyter_snippet contact_solver
+# %jupyter_snippet contact_setting
 contact_datas = [ c.createData() for c in contact_models ]
 for c in contact_models:
     c.corrector.Kd=Kv
@@ -153,11 +152,6 @@ cpin.forwardKinematics(cmodel,cdata,cq,cv,caq)
 cpin.updateFramePlacements(cmodel,cdata)
 # %end_jupyter_snippet
 
-# %jupyter_snippet contact_placement
-# Get initial contact position (for Baumgart correction)
-pin.framesForwardKinematics(model,data,robot.q0)
-# %end_jupyter_snippet
-
 # %jupyter_snippet integrate
 # Sym graph for the integration operation x,dx -> x(+)dx = [model.integrate(q,dq),v+dv]
 cintegrate = casadi.Function('integrate',[cx,cdx],
@@ -216,14 +210,6 @@ for t in range(T):
     opti.subject_to( cnext(var_xs[t],var_as[t]) == var_xs[t+1] )
 # %end_jupyter_snippet
 
-
-for x in var_dxs: opti.set_initial(x,np.zeros(ndx))
-for a in var_as: opti.set_initial(a,np.zeros(nv))
-
-# u0 = 
-# for u in us: opti.set_initial(u,u0)
-
-
 # %jupyter_snippet ocp5
 ### SOLVE
 opti.minimize(totalcost)
@@ -249,3 +235,12 @@ print("***** Display the resulting trajectory ...")
 displayScene(robot.q0,1)
 displayTraj([ x[:nq] for x in sol_xs],DT)
 # %end_jupyter_snippet
+
+# Unittest
+assert( np.allclose(sol_xs[0][:nq],robot.q0) )
+assert( np.allclose(sol_xs[0][nq:],0) )
+uref = np.array([ 205.454,  596.265,  267.621, 1121.857, 1744.932,  434.784,   -2.218, -621.331,  -88.779, -129.667,  -17.672,  -27.638])
+assert( np.allclose(sol_us[-1],uref,1e-1) )
+qref = np.array([ 0.13646, -0.04774,  1.02062,  0.03597,  0.09295,  0.00062,  0.99502,  0.0001 , -0.02862, -0.39194,  0.69805, -0.4923 , -0.04537, -0.09125,  0.46381, -0.35943,  1.28049, -0.39232,  0.08814])
+assert( np.allclose(sol_xs[-1][:nq],qref,1e-1) )
+

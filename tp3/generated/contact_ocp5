@@ -1,0 +1,17 @@
+### SOLVE
+opti.minimize(totalcost)
+opti.solver("ipopt") # set numerical backend
+opti.callback(lambda i: displayScene(opti.debug.value(var_xs[-1][:nq])))
+
+# Caution: in case the solver does not converge, we are picking the candidate values
+# at the last iteration in opti.debug, and they are NO guarantee of what they mean.
+try:
+    sol = opti.solve_limited()
+    sol_xs = [ opti.value(var_x) for var_x in var_xs ]
+    sol_as = [ opti.value(var_a) for var_a in var_as ]
+    sol_us = [ opti.value(var_u) for var_u in var_us ]
+except:
+    print('ERROR in convergence, plotting debug info.')
+    sol_xs = [ opti.debug.value(var_x) for var_x in var_xs ]
+    sol_as = [ opti.debug.value(var_a) for var_a in var_as ]
+    sol_us = [ opti.debug.value(var_u) for var_u in var_us ]

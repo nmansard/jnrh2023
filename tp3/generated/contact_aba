@@ -1,0 +1,2 @@
+# Sym graph for the aba operation
+caba = casadi.Function('fdyn', [cx,ctauq],[ cdata.ddq ])

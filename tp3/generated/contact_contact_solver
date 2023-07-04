@@ -1,0 +1,4 @@
+# Baumgart correction
+Kv = 20; Kp = 0
+# Tuning of the proximal solver (minimal version)
+prox_settings = pin.ProximalSettings(0,1e-6,1)

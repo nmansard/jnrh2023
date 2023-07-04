@@ -1,0 +1,18 @@
+# --- Casadi helpers
+cmodel = cpin.Model(model)
+cdata = cmodel.createData()
+
+nq = model.nq
+nv = model.nv
+nx = nq+nv
+cx = casadi.SX.sym("x",nx,1)
+cdx = casadi.SX.sym("dx",nv*2,1)
+cq = cx[:nq]
+cv = cx[nq:]
+caq = casadi.SX.sym("a",nv,1)
+ctauq = casadi.SX.sym("tau",nv,1)
+
+# Compute kinematics casadi graphs
+cpin.aba(cmodel,cdata,cq,cv,ctauq)
+cpin.forwardKinematics(cmodel,cdata,cq,cv,caq)
+cpin.updateFramePlacements(cmodel,cdata)

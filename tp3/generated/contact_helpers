@@ -1,0 +1,24 @@
+# --- Casadi helpers
+cmodel = cpin.Model(model)
+cdata = cmodel.createData()
+ccontact_models = [ cpin.RigidConstraintModel(c) for c in contact_models ]
+ccontact_datas = [ c.createData() for c in ccontact_models ]
+cprox_settings = cpin.ProximalSettings(prox_settings.absolute_accuracy,
+                                       prox_settings.mu,prox_settings.max_iter)
+cpin.initConstraintDynamics(cmodel,cdata, ccontact_models)
+
+nq = model.nq
+nv = model.nv
+nx = nq+nv
+ndx = 2*nv
+cx = casadi.SX.sym("x",nx,1)
+cdx = casadi.SX.sym("dx",nv*2,1)
+cq = cx[:nq]
+cv = cx[nq:]
+caq = casadi.SX.sym("a",nv,1)
+ctauq = casadi.SX.sym("tau",nv,1)
+
+# Compute kinematics casadi graphs
+cpin.constraintDynamics(cmodel,cdata,cq,cv,ctauq,ccontact_models,ccontact_datas)
+cpin.forwardKinematics(cmodel,cdata,cq,cv,caq)
+cpin.updateFramePlacements(cmodel,cdata)
