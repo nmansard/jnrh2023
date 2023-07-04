@@ -39,29 +39,25 @@ viz = pin.visualize.MeshcatVisualizer(
     robot.model, robot.collision_model, robot.visual_model
 )
 robot.setVisualizer(viz, init=False)
-robot.setVisualizer(viz, init=False)
 viz.initViewer(open=False)
 viz.loadViewerModel()
 viz.display(robot.q0)
 # %end_jupyter_snippet
 
-# %jupyter_snippet params
+# %jupyter_snippet task_params
 tool_id = model.getFrameId("tool0")
+
 transform_target_to_world = pin.SE3(
     pin.utils.rotate("x", np.pi / 4),
     np.array([-0.5, 0.1, 0.2]),
 )
 # %end_jupyter_snippet
 
-# The pinocchio model is what we are really interested by.
 
-#
-# OPTIM 6D #########################################################
-#
+# %jupyter_snippet error_function
 
 
-def cost(q: np.ndarray) -> float:
-    """Compute score from a configuration"""
+def error(q: np.ndarray) -> float:
     pin.framesForwardKinematics(model, data, q)
     transform_tool_to_world = data.oMf[tool_id]
     return norm(
@@ -69,6 +65,9 @@ def cost(q: np.ndarray) -> float:
             transform_tool_to_world.inverse() * transform_target_to_world
         ).vector
     )
+
+
+# %end_jupyter_snippet
 
 
 # --- Callback for visualization
@@ -88,7 +87,7 @@ def callback(q: np.ndarray):
 
 qguess = robot.q0
 qguess = np.array([0.12, -2.2, -1.45, 1.82, -0.95, 0.17])
-qopt = fmin_bfgs(cost, qguess, callback=callback)
+qopt = fmin_bfgs(error, qguess, callback=callback)
 
 print(
     "The robot finally reached effector placement at\n",
