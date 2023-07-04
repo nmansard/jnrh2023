@@ -97,6 +97,7 @@ print(
 # TEST ZONE ############################################################
 # Some asserts below to check the behavior of this script in stand-alone
 
+
 class InvGeom6DTest(unittest.TestCase):
     def test_qopt_6d(self):
         pin.framesForwardKinematics(model, data, qopt)
