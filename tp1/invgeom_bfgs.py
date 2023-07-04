@@ -1,14 +1,16 @@
-"""
+r"""
 Stand-alone inverse geometry for a manipulator robot with a 6d objective.
 
 Implement and solve the following nonlinear program:
 decide q \in R^NQ
 minimizing   || log( M(q)^-1 M^* ||^2
-with M(q) \in SE(3) the placement of the robot end-effector, and M^* the target.
+with M(q) \in SE(3) the placement of the robot end-effector, and M^* the
+target.
 
 The following tools are used:
 - the ur10 model (loaded by example-robot-data)
-- the fmin_bfgs solver of scipy (with finite differences automatically implemented)
+- the fmin_bfgs solver of scipy (with finite differences automatically
+  implemented)
 - the meshcat viewer
 """
 
@@ -28,7 +30,7 @@ from utils.meshcat_viewer_wrapper import MeshcatVisualizer
 
 
 # %jupyter_snippet params
-Mtarget = pin.SE3(
+transform_target_to_world = pin.SE3(
     pin.utils.rotate("x", 3.14 / 4), np.array([-0.5, 0.1, 0.2])
 )  # x,y,z
 q0 = np.array([0, -3.14 / 2, 0, 0, 0, 0])
@@ -67,14 +69,18 @@ viz.addBox(tipID, [0.08] * 3, [0.2, 0.2, 1.0, 0.5])
 def cost(q):
     """Compute score from a configuration"""
     pin.framesForwardKinematics(model, data, q)
-    M = data.oMf[idTool]
-    return norm(pin.log(M.inverse() * Mtarget).vector)
+    transform_frame_to_world = data.oMf[idTool]
+    return norm(
+        pin.log(
+            transform_frame_to_world.inverse() * transform_target_to_world
+        ).vector
+    )
 
 
 def callback(q):
     pin.framesForwardKinematics(model, data, q)
     M = data.oMf[idTool]
-    viz.applyConfiguration(boxID, Mtarget)
+    viz.applyConfiguration(boxID, transform_target_to_world)
     viz.applyConfiguration(tipID, M)
     viz.display(q)
     time.sleep(1e-1)
@@ -90,17 +96,27 @@ print(
 )
 # %end_jupyter_snippet
 
-### TEST ZONE ############################################################
-### Some asserts below to check the behavior of this script in stand-alone
+# TEST ZONE ############################################################
+# Some asserts below to check the behavior of this script in stand-alone
+
 class InvGeom6DTest(unittest.TestCase):
     def test_qopt_6d(self):
         pin.framesForwardKinematics(model, data, qopt)
         Mopt = data.oMf[idTool]
         self.assertTrue(
-            (np.abs(Mtarget.translation - Mopt.translation) < 1e-7).all()
+            (
+                np.abs(
+                    transform_target_to_world.translation - Mopt.translation
+                )
+                < 1e-7
+            ).all()
         )
         self.assertTrue(
-            np.allclose(pin.log(Mtarget.inverse() * Mopt).vector, 0, atol=1e-6)
+            np.allclose(
+                pin.log(transform_target_to_world.inverse() * Mopt).vector,
+                0,
+                atol=1e-6,
+            )
         )
 
 
