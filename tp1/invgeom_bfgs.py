@@ -14,7 +14,7 @@ The following tools are used:
 - the meshcat viewer
 """
 
-# %jupyter_snippet imports
+# %lupyter_snippet imports
 import time
 import unittest
 
@@ -25,16 +25,16 @@ import pinocchio as pin
 from numpy.linalg import norm
 from scipy.optimize import fmin_bfgs
 
-# %end_jupyter_snippet
+# %end_lupyter_snippet
 
-# %jupyter_snippet robot
+# %lupyter_snippet robot
 robot = robex.load("ur5")
 robot.q0 = np.array([0, -np.pi / 2, 0, 0, 0, 0])
 model = robot.model
 data = robot.data
-# %end_jupyter_snippet
+# %end_lupyter_snippet
 
-# %jupyter_snippet visualizer
+# %lupyter_snippet visualizer
 viz = pin.visualize.MeshcatVisualizer(
     robot.model, robot.collision_model, robot.visual_model
 )
@@ -43,15 +43,15 @@ robot.setVisualizer(viz, init=False)
 viz.initViewer(open=False)
 viz.loadViewerModel()
 viz.display(robot.q0)
-# %end_jupyter_snippet
+# %end_lupyter_snippet
 
-# %jupyter_snippet params
+# %lupyter_snippet params
 tool_id = model.getFrameId("tool0")
 transform_target_to_world = pin.SE3(
     pin.utils.rotate("x", np.pi / 4),
     np.array([-0.5, 0.1, 0.2]),
 )
-# %end_jupyter_snippet
+# %end_lupyter_snippet
 
 # The pinocchio model is what we are really interested by.
 
@@ -94,7 +94,7 @@ print(
     "The robot finally reached effector placement at\n",
     robot.placement(qopt, 6),
 )
-# %end_jupyter_snippet
+# %end_lupyter_snippet
 
 # TEST ZONE ############################################################
 # Some asserts below to check the behavior of this script in stand-alone
