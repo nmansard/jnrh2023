@@ -94,7 +94,6 @@ print(
     "The robot finally reached effector placement at\n",
     robot.placement(qopt, 6),
 )
-# %end_jupyter_snippet
 
 # TEST ZONE ############################################################
 # Some asserts below to check the behavior of this script in stand-alone
