@@ -31,20 +31,18 @@ from utils.meshcat_viewer_wrapper import MeshcatVisualizer
 
 # %jupyter_snippet params
 transform_target_to_world = pin.SE3(
-    pin.utils.rotate("x", 3.14 / 4), np.array([-0.5, 0.1, 0.2])
+    pin.utils.rotate("x", np.pi / 4), np.array([-0.5, 0.1, 0.2])
 )  # x,y,z
-q0 = np.array([0, -3.14 / 2, 0, 0, 0, 0])
 # %end_jupyter_snippet
 
 # --- Load robot model
 robot = robex.load("ur5")
-robot.q0 = q0
+robot.q0 = np.array([0, -np.pi / 2, 0, 0, 0, 0])
 
 # Open the viewer
 viz = MeshcatVisualizer(robot)
 viz.display(robot.q0)
 time.sleep(0.3)
-print("Let's go to pdes.")
 
 # The pinocchio model is what we are really interested by.
 model = robot.model
