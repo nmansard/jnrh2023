@@ -36,11 +36,11 @@ np.set_printoptions(precision=2, linewidth=300, suppress=True,threshold=1e6)
 
 ### HYPER PARAMETERS
 Mtarget = pin.SE3(pin.utils.rotate('y', 3), np.array([-0.8, -0.1, 0.2]))  # x,y,z
-q0 = np.array([ 0.5, -3.77,  7.67,  1.11,  1.  ,  1.  ])
 q0 = np.array([ 0,5,3,0,2,0 ])
+endEffectorFrameName = 'tool0'
 
-
-# These values are computed using ellipse.py
+# %jupyter_snippet 
+# These values are computed using encapsulating_ellipse.py
 ellipses = [
     SimpleNamespace(name="shoulder_lift_joint",
                     A=np.array([[75.09157846,  0.34008563, -0.08817025],
@@ -63,12 +63,15 @@ ellipses = [
                                 [-1.12998357e-02, -1.40077876e+01,  2.19132854e+02]]),
                     center=np.array([-2.64650554e-06,  6.27960760e-03,  1.11112087e-01])),
 ]
+# %jupyter_snippet 
 
+# %jupyter_snippet 
 # Obstacle positions are arbitrary. Their radius is meaningless, just for visualization.
 obstacles = [
     SimpleNamespace(radius=.01, pos=np.array([-.4,0.2+s,0.5]),name=f"obs_{i_s}")
     for i_s,s in enumerate(np.arange(-.5,.5,.1))
 ]
+# %jupyter_snippet 
 
 # --- Load robot model
 robot = robex.load('ur10')
@@ -76,17 +79,19 @@ robot.q0 = q0
 # Open the viewer
 viz = MeshcatVisualizer(robot)
 viz.display(robot.q0)
+# %jupyter_snippet 
 for e in ellipses:
     e.id = robot.model.getJointId(e.name)
     l,P = np.linalg.eig(e.A)
     e.radius = 1/l**.5
     e.rotation = P
     e.placement = pin.SE3(P,e.center)
+# %jupyter_snippet 
 
 # The pinocchio model is what we are really interested by.
 model = robot.model
 data = model.createData()
-idTool = model.getFrameId('tool0')
+endEffector_ID = model.getFrameId(endEffectorFrameName)
 
 # --- Add box to represent target
 # Add a vizualization for the target
@@ -95,20 +100,23 @@ viz.addBox(boxID, [.05, .1, .2], [1., .2, .2, .5])
 # Add a vizualisation for the tip of the arm.
 tipID = "world/blue"
 viz.addBox(tipID, [.08] * 3, [.2, .2, 1., .5])
+# %jupyter_snippet 
 for e in ellipses:
     viz.addEllipsoid(f'el_{e.name}',e.radius,[.3,.9,.3,.3])
 for io,o in enumerate(obstacles):
     viz.addSphere(f'obs_{io}',o.radius,[.8,.3,.3,.9])
+# %jupyter_snippet 
 
+# %jupyter_snippet 
 def displayScene(q,dt=1e-1):
     '''
     Given the robot configuration, display:
     - the robot
-    - a box representing idTool
+    - a box representing endEffector_ID
     - a box representing Mtarget
     '''
     pin.framesForwardKinematics(model,data,q)
-    M = data.oMf[idTool]
+    M = data.oMf[endEffector_ID]
     viz.applyConfiguration(boxID, Mtarget)
     viz.applyConfiguration(tipID, M)
     for e in ellipses:
@@ -119,6 +127,7 @@ def displayScene(q,dt=1e-1):
     viz.display(q)
     time.sleep(dt)
 displayScene(robot.q0)
+# %jupyter_snippet 
 
 q = robot.q0
                     
@@ -128,44 +137,39 @@ cdata = cmodel.createData()
 
 cq = casadi.SX.sym("q",model.nq,1)
 cpin.framesForwardKinematics(cmodel,cdata,cq)
-pos_tool = casadi.Function('ptool', [cq], [ cdata.oMf[idTool].translation ])
-error_tool = casadi.Function('etool', [cq],
-                             [ cpin.log6(cdata.oMf[idTool].inverse() * cpin.SE3(Mtarget)).vector ])
-error_tool = casadi.Function('etool', [cq],
-                             [ cdata.oMf[idTool].translation - Mtarget.translation ])
+error6_tool = casadi.Function('etool', [cq],
+                             [ cpin.log6(cdata.oMf[endEffector_ID].inverse() * cpin.SE3(Mtarget)).vector ])
+error3_tool = casadi.Function('etool', [cq],
+                             [ cdata.oMf[endEffector_ID].translation - Mtarget.translation ])
+error_tool = error3_tool
 
+# %jupyter_snippet 
 cpos = casadi.SX.sym('p',3)
 for e in ellipses:
     e.e_pos = [  casadi.Function(f"e{e.id}_pos_{o.name}",[cq],
                                  [ cdata.oMi[e.id].inverse().act(casadi.SX(o.pos)) ])
                  for o in obstacles ]
-
-    e.oMe = [  casadi.Function(f"oMe_{o.name}",[cq],
-                               [ cdata.oMi[e.id].homogeneous ])
-               for o in obstacles ]
-    e.o_p = [  casadi.Function(f"op_{o.name}",[cq],
-                               [ casadi.SX(o.pos) ])
-               for o in obstacles ]
+    e.e_pos2 =  casadi.Function(f"e{e.id}",[cq,cpos],
+                                 [ cdata.oMi[e.id].inverse().act(casadi.SX(cpos)) ])
+                
+# %jupyter_snippet 
 
 opti = casadi.Opti()
 var_q = opti.variable(model.nq)
-totalcost = casadi.sumsqr( var_q - robot.q0 )
-#opti.subject_to( error_tool(var_q) == 0 )
 totalcost = casadi.sumsqr(error_tool(var_q))
 
 for e in ellipses:
     for (io,o) in enumerate(obstacles):
         # obstacle position in ellipsoid (joint) frame
-        # e_pos = e.e_pos(var_q,o.pos)
-        opti.subject_to( (e.e_pos[io](var_q)-e.center).T@e.A@(e.e_pos[io](var_q)-e.center) >=1 )
+        e_pos = e.e_pos[io](var_q)
+        e_pos = e.e_pos2(var_q,o.pos)
+        opti.subject_to( (e_pos-e.center).T@e.A@(e_pos-e.center) >=1 )
 
 ### SOLVE
 opti.minimize(totalcost)
 p_opts = dict(print_time=False, verbose=False)
 s_opts = dict(print_level=0)
-#opti.solver("ipopt", p_opts, s_opts)
 opti.solver("ipopt") # set numerical backend
-#opti.callback(lambda i: displayScene(opti.debug.value(var_q)))
 opti.set_initial(var_q,q)
 
 # Caution: in case the solver does not converge, we are picking the candidate values
@@ -186,3 +190,9 @@ try:
 
 except:
     print( 'ERROR IN CONVERGENCE')
+
+
+# Test
+ref_q = np.array([ 0.24658,  4.14076,  4.71167, -2.14954,  2.36311,  0.     ])
+assert( np.allclose(sol_q,ref_q,1e-5) )
+assert( opti.stats()['iter_count'] == 55)
