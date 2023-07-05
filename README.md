@@ -1,6 +1,7 @@
 # JNRH'2023: Pinocchio Tutorial
 
 Support chat: <https://matrix.to/#/#jnrh2023-tuto:laas.fr>
+Slides: <https://gepettoweb.laas.fr/talks/jnrh2023/>
 
 ## Getting started
 
