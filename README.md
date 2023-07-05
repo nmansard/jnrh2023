@@ -1,5 +1,7 @@
 # JNRH'2023: Pinocchio Tutorial
 
+Support chat: <https://matrix.to/#/#jnrh2023-tuto:laas.fr>
+
 ## Getting started
 
 Start by cloning this repository:
