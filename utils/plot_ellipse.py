@@ -1,5 +1,4 @@
 import numpy as np
-from mpl_toolkits.mplot3d import Axes3D
 
 
 def plotEllipse(ax, opti_A, opti_c):

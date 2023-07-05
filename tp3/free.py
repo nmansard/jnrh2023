@@ -29,7 +29,6 @@ The following tools are used:
 
 # %jupyter_snippet import
 import time
-import unittest
 import numpy as np
 import pinocchio as pin
 import casadi

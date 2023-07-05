@@ -23,7 +23,6 @@ def generate(ipynb, folder):
     for filename in folder.glob("*.py"):
         print(f" processing {filename}")
         content = []
-        hidden = False
         dest = None
         with filename.open() as f_in:
             for line_number, line in enumerate(f_in):
@@ -33,7 +32,6 @@ def generate(ipynb, folder):
                             f"%{hashtags[0]} block open twice at line {line_number + 1}"
                         )
                     dest = generated / f"{filename.stem}_{line.split()[2]}"
-                    hidden = False
                 elif any([line.strip() == f"# %end_{hashtag}" for hashtag in hashtags]):
                     if dest is None:
                         raise SyntaxError(
@@ -51,7 +49,6 @@ def generate(ipynb, folder):
                         # if f'%do_not_load {dest}' in cell['source'][0]:
                         #    data['cells'][cell_number]['source'] = [f'%do_not_load {dest}\n']
                     content = []
-                    hidden = False
                     dest = None
                 elif dest is not None:
                     content.append(line)

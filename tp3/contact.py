@@ -28,7 +28,6 @@ The following tools are used:
 """
 
 import time
-import unittest
 import numpy as np
 import pinocchio as pin
 import casadi

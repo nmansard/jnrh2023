@@ -1,12 +1,8 @@
-import time
-import unittest
 import numpy as np
 import pinocchio as pin
 import casadi
 from pinocchio import casadi as cpin
 import example_robot_data as robex
-from scipy.optimize import fmin_bfgs
-from numpy.linalg import norm
 
 
 # Change numerical print
