@@ -1,5 +1,7 @@
 opti = casadi.Opti()
-var_dxs = [ opti.variable(ndx) for t in range(T+1) ]
-var_as = [ opti.variable(nv) for t in range(T) ]
-var_us = [ opti.variable(nv-6) for t in range(T) ]
-var_xs = [ cintegrate( np.concatenate([robot.q0,np.zeros(nv)]),var_dx) for var_dx in var_dxs ]
+var_dxs = [opti.variable(ndx) for t in range(T + 1)]
+var_as = [opti.variable(nv) for t in range(T)]
+var_us = [opti.variable(nv - 6) for t in range(T)]
+var_xs = [
+    cintegrate(np.concatenate([robot.q0, np.zeros(nv)]), var_dx) for var_dx in var_dxs
+]

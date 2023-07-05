@@ -1,4 +1,4 @@
 for t in range(T):
-    tau = casadi.vertcat(np.zeros(6),var_us[t])
-    opti.subject_to( caba(var_xs[t],tau) == var_as[t] )
-    opti.subject_to( cnext(var_xs[t],var_as[t]) == var_xs[t+1] )
+    tau = casadi.vertcat(np.zeros(6), var_us[t])
+    opti.subject_to(caba(var_xs[t], tau) == var_as[t])
+    opti.subject_to(cnext(var_xs[t], var_as[t]) == var_xs[t + 1])

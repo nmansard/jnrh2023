@@ -3,4 +3,4 @@ for g_v in vertices:
     # Convert point from geometry frame to joint frame
     j_v = geom.placement.act(g_v)
     # Constraint the ellipsoid to be including the point
-    opti.subject_to( (j_v-var_c).T@A@(j_v-var_c)  <= 1  )
+    opti.subject_to((j_v - var_c).T @ A @ (j_v - var_c) <= 1)

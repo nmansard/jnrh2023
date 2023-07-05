@@ -1,6 +1,7 @@
-cpos = casadi.SX.sym('p',3)
+cpos = casadi.SX.sym("p", 3)
 for e in ellipses:
     # Position of the obstacle cpos in the ellipse frame.
-    e.e_pos =  casadi.Function(f"e{e.id}",[cq,cpos],
-                                 [ cdata.oMi[e.id].inverse().act(casadi.SX(cpos)) ])
-                
+    e.e_pos = casadi.Function(
+        f"e{e.id}", [cq, cpos], [cdata.oMi[e.id].inverse().act(casadi.SX(cpos))]
+    )
+

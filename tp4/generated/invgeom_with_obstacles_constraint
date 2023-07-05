@@ -1,5 +1,5 @@
 for e in ellipses:
     for o in obstacles:
         # obstacle position in ellipsoid (joint) frame
-        e_pos = e.e_pos(var_q,o.pos)
-        opti.subject_to( (e_pos-e.center).T@e.A@(e_pos-e.center) >=1 )
+        e_pos = e.e_pos(var_q, o.pos)
+        opti.subject_to((e_pos - e.center).T @ e.A @ (e_pos - e.center) >= 1)

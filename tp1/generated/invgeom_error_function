@@ -4,9 +4,7 @@ def error(q: np.ndarray) -> float:
     pin.framesForwardKinematics(model, data, q)
     transform_tool_to_world = data.oMf[tool_id]
     return norm(
-        pin.log(
-            transform_tool_to_world.inverse() * transform_target_to_world
-        ).vector
+        pin.log(transform_tool_to_world.inverse() * transform_target_to_world).vector
     )
 
 

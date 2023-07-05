@@ -1,28 +1,38 @@
 # Sym graph for the contact constraint and Baugart correction terms
 # Works for both 3D and 6D contacts.
 # Uses the contact list <contacts> where each item must have a <name>, an <id> and a <type> field.
-dpcontacts = {} # Error in contact position
+dpcontacts = {}  # Error in contact position
 vcontacts = {}  # Error in contact velocity
 acontacts = {}  # Contact acceleration
 
 for c in contacts:
     if c.type == pin.ContactType.CONTACT_3D:
         p0 = data.oMf[c.id].translation.copy()
-        dpcontacts[c.name] = casadi.Function(f'dpcontact_{c.name}', [cx],
-                                             [ -(cdata.oMf[c.id].inverse().act(casadi.SX(p0))) ])
-        vcontacts[c.name] = casadi.Function(f'vcontact_{c.name}', [cx],
-                                            [cpin.getFrameVelocity( cmodel,cdata,c.id,
-                                                                    pin.LOCAL ).linear])
-        acontacts[c.name] = casadi.Function(f'acontact_{c.name}', [cx,caq],
-                                            [cpin.getFrameClassicalAcceleration( cmodel,cdata,c.id,
-                                                                                 pin.LOCAL ).linear])
+        dpcontacts[c.name] = casadi.Function(
+            f"dpcontact_{c.name}",
+            [cx],
+            [-(cdata.oMf[c.id].inverse().act(casadi.SX(p0)))],
+        )
+        vcontacts[c.name] = casadi.Function(
+            f"vcontact_{c.name}",
+            [cx],
+            [cpin.getFrameVelocity(cmodel, cdata, c.id, pin.LOCAL).linear],
+        )
+        acontacts[c.name] = casadi.Function(
+            f"acontact_{c.name}",
+            [cx, caq],
+            [cpin.getFrameClassicalAcceleration(cmodel, cdata, c.id, pin.LOCAL).linear],
+        )
     elif c.type == pin.ContactType.CONTACT_6D:
         p0 = data.oMf[c.id]
-        dpcontacts[c.name] = casadi.Function(f'dpcontact_{c.name}',[cx],
-                                             [np.zeros(6)])
-        vcontacts[c.name] = casadi.Function(f'vcontact_{c.name}', [cx],
-                                            [cpin.getFrameVelocity( cmodel,cdata,c.id,
-                                                                    pin.LOCAL ).vector])
-        acontacts[c.name] = casadi.Function(f'acontact_{c.name}', [cx,caq],
-                                            [cpin.getFrameAcceleration( cmodel,cdata,c.id,
-                                                                        pin.LOCAL ).vector])
+        dpcontacts[c.name] = casadi.Function(f"dpcontact_{c.name}", [cx], [np.zeros(6)])
+        vcontacts[c.name] = casadi.Function(
+            f"vcontact_{c.name}",
+            [cx],
+            [cpin.getFrameVelocity(cmodel, cdata, c.id, pin.LOCAL).vector],
+        )
+        acontacts[c.name] = casadi.Function(
+            f"acontact_{c.name}",
+            [cx, caq],
+            [cpin.getFrameAcceleration(cmodel, cdata, c.id, pin.LOCAL).vector],
+        )

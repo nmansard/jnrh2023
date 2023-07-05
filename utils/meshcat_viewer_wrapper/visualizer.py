@@ -35,7 +35,7 @@ class MeshcatVisualizer(PMV):
         model=None,
         collision_model=None,
         visual_model=None,
-        url="classical",
+        url=None,
         autoclean=False,
     ):
         if robot is not None:

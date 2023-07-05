@@ -1,6 +1,6 @@
 opti.minimize(totalcost)
-opti.solver("ipopt") # set numerical backend
-opti.set_initial(var_r,10)
+opti.solver("ipopt")  # set numerical backend
+opti.set_initial(var_r, 10)
 
 sol = opti.solve_limited()
 

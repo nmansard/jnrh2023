@@ -1,4 +1,4 @@
 ### HYPER PARAMETERS
-Mtarget = pin.SE3(pin.utils.rotate('y', 3), np.array([-0.8, -0.1, 0.2]))  # x,y,z
-q0 = np.array([ 0,5,3,0,2,0 ])
-endEffectorFrameName = 'tool0'
+Mtarget = pin.SE3(pin.utils.rotate("y", 3), np.array([-0.8, -0.1, 0.2]))  # x,y,z
+q0 = np.array([0, 5, 3, 0, 2, 0])
+endEffectorFrameName = "tool0"

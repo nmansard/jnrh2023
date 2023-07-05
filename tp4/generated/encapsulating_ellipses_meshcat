@@ -1,5 +1,5 @@
 # Build the ellipsoid 3d shape
 # Ellipsoid in meshcat
-viz.addEllipsoid('el',sol_r,[.3,.9,.3,.3])
+viz.addEllipsoid("el", sol_r, [0.3, 0.9, 0.3, 0.3])
 # jMel is the placement of the ellipsoid in the joint frame
-jMel = pin.SE3(sol_R,sol_c)
+jMel = pin.SE3(sol_R, sol_c)

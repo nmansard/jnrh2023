@@ -1,2 +1,2 @@
 for t in range(T):
-    opti.subject_to( cnext(var_xs[t],var_as[t]) == var_xs[t+1] )
+    opti.subject_to(cnext(var_xs[t], var_as[t]) == var_xs[t + 1])

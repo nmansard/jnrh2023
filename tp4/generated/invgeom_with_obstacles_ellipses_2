@@ -1,6 +1,6 @@
 for e in ellipses:
     e.id = robot.model.getJointId(e.name)
-    l,P = np.linalg.eig(e.A)
-    e.radius = 1/l**.5
+    l, P = np.linalg.eig(e.A)
+    e.radius = 1 / l**0.5
     e.rotation = P
-    e.placement = pin.SE3(P,e.center)
+    e.placement = pin.SE3(P, e.center)

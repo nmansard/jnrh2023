@@ -1,7 +1,7 @@
 # --- Add box to represent target
 # Add a vizualization for the target
 boxID = "world/box"
-viz.addBox(boxID, [.05, .1, .2], [1., .2, .2, .5])
+viz.addBox(boxID, [0.05, 0.1, 0.2], [1.0, 0.2, 0.2, 0.5])
 # Add a vizualisation for the tip of the arm.
 tipID = "world/blue"
-viz.addBox(tipID, [.08] * 3, [.2, .2, 1., .5])
+viz.addBox(tipID, [0.08] * 3, [0.2, 0.2, 1.0, 0.5])
