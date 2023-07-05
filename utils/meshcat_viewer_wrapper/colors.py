@@ -2,7 +2,7 @@ import meshcat
 
 
 def rgb2int(r, g, b):
-    '''
+    """
     Convert 3 integers (chars) 0 <= r, g, b < 256 into one single integer = 256**2*r+256*g+b, as expected by Meshcat.
 
     >>> rgb2int(0, 0, 0)
@@ -15,7 +15,7 @@ def rgb2int(r, g, b):
     True
     >>> rgb2int(255, 255, 255) == 0xFFFFFF
     True
-    '''
+    """
     return int((r << 16) + (g << 8) + b)
 
 
@@ -37,13 +37,13 @@ black = material(color=rgb2int(5, 5, 5), transparent=False)
 grey = material(color=rgb2int(120, 120, 120), transparent=False)
 
 colormap = {
-    'red': red,
-    'blue': blue,
-    'green': green,
-    'yellow': yellow,
-    'magenta': magenta,
-    'cyan': cyan,
-    'black': black,
-    'white': white,
-    'grey': grey
+    "red": red,
+    "blue": blue,
+    "green": green,
+    "yellow": yellow,
+    "magenta": magenta,
+    "cyan": cyan,
+    "black": black,
+    "white": white,
+    "grey": grey,
 }

@@ -85,9 +85,7 @@ def frame(
         As per the de-facto standard (Blender, OpenRAVE, RViz, ...), the
         x-axis is red, the y-axis is green and the z-axis is blue.
     """
-    material = meshcat.geometry.MeshLambertMaterial(
-        color=origin_color, opacity=opacity
-    )
+    material = meshcat.geometry.MeshLambertMaterial(color=origin_color, opacity=opacity)
     sphere = meshcat.geometry.Sphere(origin_radius)
     handle.set_object(sphere, material)
     __attach_axes(handle, axis_length, axis_thickness, opacity)
