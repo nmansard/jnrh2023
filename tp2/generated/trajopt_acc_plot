@@ -3,20 +3,30 @@ h_pcontacts = []
 h_vcontacts = []
 h_acontacts = []
 for t in range(T):
-    x=sol_xs[t]; q=x[:nq]; v=x[nq:]; a=sol_as[t]
-    h_pcontacts.append( np.concatenate([ opti.value(dpcontacts[c.name](var_xs[t]))
-                                         for c in contacts ]) )
-    h_vcontacts.append( np.concatenate([ opti.value(vcontacts[c.name](var_xs[t]))
-                                         for c in contacts ]) )
-    h_acontacts.append( np.concatenate([ opti.value(acontacts[c.name](var_xs[t],var_as[t]))
-                                         for c in contacts ]) )
-    
-    
-import matplotlib.pylab as plt; plt.ion()
-fig,ax=plt.subplots(2,1,figsize=(6,6))
+    x = sol_xs[t]
+    q = x[:nq]
+    v = x[nq:]
+    a = sol_as[t]
+    h_pcontacts.append(
+        np.concatenate([opti.value(dpcontacts[c.name](var_xs[t])) for c in contacts])
+    )
+    h_vcontacts.append(
+        np.concatenate([opti.value(vcontacts[c.name](var_xs[t])) for c in contacts])
+    )
+    h_acontacts.append(
+        np.concatenate(
+            [opti.value(acontacts[c.name](var_xs[t], var_as[t])) for c in contacts]
+        )
+    )
+
+
+import matplotlib.pylab as plt
+
+plt.ion()
+fig, ax = plt.subplots(2, 1, figsize=(6, 6))
 ax[0].plot(h_pcontacts)
-ax[0].set_title('delta position')
-ax[0].axis((-2.45, 51.45, -.5e-3, .5e-3))
+ax[0].set_title("delta position")
+ax[0].axis((-2.45, 51.45, -0.5e-3, 0.5e-3))
 ax[1].plot(h_vcontacts)
-ax[1].set_title('velocity')
+ax[1].set_title("velocity")
 ax[1].axis((-2.45, 51.45, -0.006627568040194312, 0.007463128239663308))

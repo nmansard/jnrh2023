@@ -1,6 +1,5 @@
 import pinocchio as pin
 from pinocchio import casadi as cpin
-import casadi
-import numpy as np
-import example_robot_data as robex
+
 from utils.meshcat_viewer_wrapper import MeshcatVisualizer
+

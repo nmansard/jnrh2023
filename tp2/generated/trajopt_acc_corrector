@@ -1,4 +1,6 @@
-cbaumgart = { c.name:
-              casadi.Function(f'K_{c.name}', [cx],
-                              [ Kp*dpcontacts[c.name](cx) + Kv*vcontacts[c.name](cx) ])
-              for c in contacts }
+cbaumgart = {
+    c.name: casadi.Function(
+        f"K_{c.name}", [cx], [Kp * dpcontacts[c.name](cx) + Kv * vcontacts[c.name](cx)]
+    )
+    for c in contacts
+}

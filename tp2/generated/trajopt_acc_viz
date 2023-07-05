@@ -1,22 +1,23 @@
 # --- Add box to represent target
 # Add a vizualization for the target
 boxID = "world/box"
-viz.addBox(boxID, [.05, .1, .2], [1., .2, .2, .5])
+viz.addBox(boxID, [0.05, 0.1, 0.2], [1.0, 0.2, 0.2, 0.5])
 # Add a vizualisation for the tip of the arm.
 tipID = "world/blue"
-viz.addBox(tipID, [.08] * 3, [.2, .2, 1., .5])
+viz.addBox(tipID, [0.08] * 3, [0.2, 0.2, 1.0, 0.5])
 for c in contacts:
-    c.viz =  f"world/contact_{c.name}"
-    viz.addSphere(c.viz, [.07], [.8, .8, .2, .5])
+    c.viz = f"world/contact_{c.name}"
+    viz.addSphere(c.viz, [0.07], [0.8, 0.8, 0.2, 0.5])
 
-def displayScene(q,dt=1e-1):
-    '''
+
+def displayScene(q, dt=1e-1):
+    """
     Given the robot configuration, display:
     - the robot
     - a box representing endEffector_ID
     - a box representing Mtarget
-    '''
-    pin.framesForwardKinematics(model,data,q)
+    """
+    pin.framesForwardKinematics(model, data, q)
     M = data.oMf[endEffector_ID]
     viz.applyConfiguration(boxID, Mtarget)
     viz.applyConfiguration(tipID, M)
@@ -24,7 +25,11 @@ def displayScene(q,dt=1e-1):
         viz.applyConfiguration(c.viz, data.oMf[c.id])
     viz.display(q)
     time.sleep(dt)
-def displayTraj(qs,dt=1e-2):
+
+
+def displayTraj(qs, dt=1e-2):
     for q in qs[1:]:
-        displayScene(q,dt=dt)
+        displayScene(q, dt=dt)
+
+
 displayScene(robot.q0)

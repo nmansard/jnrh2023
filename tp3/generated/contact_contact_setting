@@ -1,4 +1,4 @@
-contact_datas = [ c.createData() for c in contact_models ]
+contact_datas = [c.createData() for c in contact_models]
 for c in contact_models:
-    c.corrector.Kd=Kv
-    c.corrector.Kp=Kp
+    c.corrector.Kd = Kv
+    c.corrector.Kp = Kp

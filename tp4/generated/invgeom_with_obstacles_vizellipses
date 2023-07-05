@@ -1,4 +1,4 @@
 for e in ellipses:
-    viz.addEllipsoid(f'el_{e.name}',e.radius,[.3,.9,.3,.3])
-for io,o in enumerate(obstacles):
-    viz.addSphere(f'obs_{io}',o.radius,[.8,.3,.3,.9])
+    viz.addEllipsoid(f"el_{e.name}", e.radius, [0.3, 0.9, 0.3, 0.3])
+for io, o in enumerate(obstacles):
+    viz.addSphere(f"obs_{io}", o.radius, [0.8, 0.3, 0.3, 0.9])

@@ -1,2 +1,2 @@
 for t in range(T):
-    totalcost += w_run * casadi.sumsqr( var_qs[t] - var_qs[t+1] )
+    totalcost += w_run * casadi.sumsqr(var_qs[t] - var_qs[t + 1])

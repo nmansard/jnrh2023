@@ -1,8 +1,8 @@
 endEffector_ID = model.getFrameId(endEffectorFrameName)
 for c in contacts:
     c.id = model.getFrameId(c.name)
-    assert(c.id<len(model.frames))
+    assert c.id < len(model.frames)
     c.jid = model.frames[c.id].parentJoint
     c.placement = model.frames[c.id].placement
-    c.model = pin.RigidConstraintModel(c.type,model,c.jid,c.placement)
-contact_models = [ c.model for c in contacts ] 
+    c.model = pin.RigidConstraintModel(c.type, model, c.jid, c.placement)
+contact_models = [c.model for c in contacts]

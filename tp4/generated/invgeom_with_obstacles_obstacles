@@ -1,5 +1,5 @@
 # Obstacle positions are arbitrary. Their radius is meaningless, just for visualization.
 obstacles = [
-    SimpleNamespace(radius=.01, pos=np.array([-.4,0.2+s,0.5]),name=f"obs_{i_s}")
-    for i_s,s in enumerate(np.arange(-.5,.5,.1))
+    SimpleNamespace(radius=0.01, pos=np.array([-0.4, 0.2 + s, 0.5]), name=f"obs_{i_s}")
+    for i_s, s in enumerate(np.arange(-0.5, 0.5, 0.1))
 ]

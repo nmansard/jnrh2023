@@ -1,4 +1,4 @@
 endEffector_ID = model.getFrameId(endEffectorFrameName)
 for c in contacts:
     c.id = model.getFrameId(c.name)
-    assert(c.id<len(model.frames))
+    assert c.id < len(model.frames)

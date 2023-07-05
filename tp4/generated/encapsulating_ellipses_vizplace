@@ -1,7 +1,8 @@
 # Place the body, the vertices and the ellispod at a random configuration oMj_rand
 oMj_rand = pin.SE3.Random()
-viz.applyConfiguration(viz.getViewerNodeName(geom,pin.VISUAL),oMj_rand)
-for i in  np.arange(0,vertices.shape[0]):
-    viz.applyConfiguration(f'world/point_{i}',
-                           oMj_rand.act(vertices[i]).tolist()+[1,0,0,0])
-viz.applyConfiguration('el',oMj_rand*jMel)
+viz.applyConfiguration(viz.getViewerNodeName(geom, pin.VISUAL), oMj_rand)
+for i in np.arange(0, vertices.shape[0]):
+    viz.applyConfiguration(
+        f"world/point_{i}", oMj_rand.act(vertices[i]).tolist() + [1, 0, 0, 0]
+    )
+viz.applyConfiguration("el", oMj_rand * jMel)

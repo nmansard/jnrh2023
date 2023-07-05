@@ -1,4 +1,4 @@
-'''
+"""
 Implement and solve the following nonlinear program:
 decide q_0 ... q_T \in R^NQxT
 minimizing   sum_t || q_t - q_t+1 ||**2 + || log( M(q_T)^-1 M^* ||^2 
@@ -10,41 +10,40 @@ The following tools are used:
 - pinocchio.casadi for writing the problem and computing its derivatives
 - the IpOpt solver wrapped in casadi
 - the meshcat viewer
-'''
+"""
 
 # %jupyter_snippet imports
 import time
-import unittest
+
+import casadi
+import example_robot_data as robex
 import numpy as np
 import pinocchio as pin
-import casadi
 from pinocchio import casadi as cpin
-import example_robot_data as robex
-from scipy.optimize import fmin_bfgs
-from numpy.linalg import norm
 
 from utils.meshcat_viewer_wrapper import MeshcatVisualizer
+
 # %end_jupyter_snippet
 
 
 # Change numerical print
-pin.SE3.__repr__=pin.SE3.__str__
-np.set_printoptions(precision=2, linewidth=300, suppress=True,threshold=1e6)
+pin.SE3.__repr__ = pin.SE3.__str__
+np.set_printoptions(precision=2, linewidth=300, suppress=True, threshold=1e6)
 
 ### HYPER PARAMETERS
 # %jupyter_snippet configurations
-Mtarget = pin.SE3(pin.utils.rotate('y', 3), np.array([-0.5, 0.1, 0.2]))  # x,y,z
+Mtarget = pin.SE3(pin.utils.rotate("y", 3), np.array([-0.5, 0.1, 0.2]))  # x,y,z
 q0 = np.array([0, -3.14 / 2, 0, 0, 0, 0])
-endEffectorFrameName = 'tool0'
-# %end_jupyter_snippet 
+endEffectorFrameName = "tool0"
+# %end_jupyter_snippet
 # %jupyter_snippet hyper
 T = 10
-w_run = .1
+w_run = 0.1
 w_term = 1
 # %end_jupyter_snippet
 
 # --- Load robot model
-robot = robex.load('ur10')
+robot = robex.load("ur10")
 # %jupyter_snippet modeldata
 robot.q0 = q0
 
@@ -61,28 +60,34 @@ viz = MeshcatVisualizer(robot)
 viz.display(robot.q0)
 # Add a vizualization for the target
 boxID = "world/box"
-viz.addBox(boxID, [.05, .1, .2], [1., .2, .2, .5])
+viz.addBox(boxID, [0.05, 0.1, 0.2], [1.0, 0.2, 0.2, 0.5])
 # Add a vizualisation for the tip of the arm.
 tipID = "world/blue"
-viz.addBox(tipID, [.08] * 3, [.2, .2, 1., .5])
-def displayScene(q,dt=1e-1):
-    '''
+viz.addBox(tipID, [0.08] * 3, [0.2, 0.2, 1.0, 0.5])
+
+
+def displayScene(q, dt=1e-1):
+    """
     Given the robot configuration, display:
     - the robot
     - a box representing endEffector_ID
     - a box representing Mtarget
-    '''
-    pin.framesForwardKinematics(model,data,q)
+    """
+    pin.framesForwardKinematics(model, data, q)
     M = data.oMf[endEffector_ID]
     viz.applyConfiguration(boxID, Mtarget)
     viz.applyConfiguration(tipID, M)
     viz.display(q)
     time.sleep(dt)
+
+
 # %end_jupyter_snippet
 # %jupyter_snippet disptraj
-def displayTraj(qs,dt=1e-2):
+def displayTraj(qs, dt=1e-2):
     for q in qs[1:]:
-        displayScene(q,dt=dt)
+        displayScene(q, dt=dt)
+
+
 # %end_jupyter_snippet
 
 # %jupyter_snippet casadi
@@ -90,20 +95,24 @@ def displayTraj(qs,dt=1e-2):
 cmodel = cpin.Model(model)
 cdata = cmodel.createData()
 
-cq = casadi.SX.sym("x",model.nq,1)
-cpin.framesForwardKinematics(cmodel,cdata,cq)
+cq = casadi.SX.sym("x", model.nq, 1)
+cpin.framesForwardKinematics(cmodel, cdata, cq)
 
-error3_tool = casadi.Function('etool3', [cq],
-                              [ cdata.oMf[endEffector_ID].translation - Mtarget.translation ])
-error6_tool = casadi.Function('etool6', [cq],
-                             [ cpin.log6(cdata.oMf[endEffector_ID].inverse() * cpin.SE3(Mtarget)).vector ])
+error3_tool = casadi.Function(
+    "etool3", [cq], [cdata.oMf[endEffector_ID].translation - Mtarget.translation]
+)
+error6_tool = casadi.Function(
+    "etool6",
+    [cq],
+    [cpin.log6(cdata.oMf[endEffector_ID].inverse() * cpin.SE3(Mtarget)).vector],
+)
 error_tool = error3_tool
 # %end_jupyter_snippet
 
 ### PROBLEM
 # %jupyter_snippet casadi_opti
 opti = casadi.Opti()
-var_qs = [ opti.variable(model.nq) for t in range(T+1) ]
+var_qs = [opti.variable(model.nq) for t in range(T + 1)]
 totalcost = 0
 # %end_jupyter_snippet
 
@@ -113,31 +122,29 @@ opti.subject_to(var_qs[0] == robot.q0)
 
 # %jupyter_snippet casadi_runcost
 for t in range(T):
-    totalcost += w_run * casadi.sumsqr( var_qs[t] - var_qs[t+1] )
+    totalcost += w_run * casadi.sumsqr(var_qs[t] - var_qs[t + 1])
 # %end_jupyter_snippet
 
 # %jupyter_snippet casadi_termcost
-totalcost += w_term * casadi.sumsqr( error_tool(var_qs[T]) )
+totalcost += w_term * casadi.sumsqr(error_tool(var_qs[T]))
 # %end_jupyter_snippet
 
 ### SOLVE
 # %jupyter_snippet solve
 opti.minimize(totalcost)
-opti.solver("ipopt") # set numerical backend
+opti.solver("ipopt")  # set numerical backend
 opti.callback(lambda i: displayScene(opti.debug.value(var_qs[-1])))
 
 # Caution: in case the solver does not converge, we are picking the candidate values
 # at the last iteration in opti.debug, and they are NO guarantee of what they mean.
 try:
     sol = opti.solve_limited()
-    sol_qs = [ opti.value(var_q) for var_q in var_qs ]
+    sol_qs = [opti.value(var_q) for var_q in var_qs]
 except:
-    print('ERROR in convergence, plotting debug info.')
-    sol_qs = [ opti.debug.value(var_q) for var_q in var_qs ]
+    print("ERROR in convergence, plotting debug info.")
+    sol_qs = [opti.debug.value(var_q) for var_q in var_qs]
 # %end_jupyter_snippet
 
 print("***** Display the resulting trajectory ...")
-displayScene(robot.q0,1)
+displayScene(robot.q0, 1)
 displayTraj(sol_qs)
-
-

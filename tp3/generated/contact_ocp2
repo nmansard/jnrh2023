@@ -1,6 +1,6 @@
 totalcost = 0
 # Define the running cost
 for t in range(T):
-    totalcost += 1e-3 * DT * casadi.sumsqr( var_xs[t][nq:] )
-    totalcost += 1e-4 * DT * casadi.sumsqr( var_as[t] )
-totalcost += 1e1 * casadi.sumsqr( error_tool(var_xs[T]) )
+    totalcost += 1e-3 * DT * casadi.sumsqr(var_xs[t][nq:])
+    totalcost += 1e-4 * DT * casadi.sumsqr(var_as[t])
+totalcost += 1e1 * casadi.sumsqr(error_tool(var_xs[T]))

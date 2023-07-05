@@ -1,4 +1,4 @@
 opti = casadi.Opti()
-var_xs = [ opti.variable(nx) for t in range(T+1) ]
-var_as = [ opti.variable(nv) for t in range(T) ]
-var_us = [ opti.variable(nv) for t in range(T) ]
+var_xs = [opti.variable(nx) for t in range(T + 1)]
+var_as = [opti.variable(nv) for t in range(T)]
+var_us = [opti.variable(nv) for t in range(T)]

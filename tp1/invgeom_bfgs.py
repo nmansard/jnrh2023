@@ -65,9 +65,7 @@ def cost(q: np.ndarray) -> float:
     pin.framesForwardKinematics(model, data, q)
     transform_tool_to_world = data.oMf[tool_id]
     return norm(
-        pin.log(
-            transform_tool_to_world.inverse() * transform_target_to_world
-        ).vector
+        pin.log(transform_tool_to_world.inverse() * transform_target_to_world).vector
     )
 
 
@@ -94,9 +92,7 @@ def meshcat_frame(
         As per the de-facto standard (Blender, OpenRAVE, RViz, ...), the
         x-axis is red, the y-axis is green and the z-axis is blue.
     """
-    material = meshcat.geometry.MeshLambertMaterial(
-        color=origin_color, opacity=opacity
-    )
+    material = meshcat.geometry.MeshLambertMaterial(color=origin_color, opacity=opacity)
     sphere = meshcat.geometry.Sphere(origin_radius)
     handle.set_object(sphere, material)
     direction_names = ["x", "y", "z"]
@@ -152,10 +148,7 @@ class InvGeom6DTest(unittest.TestCase):
         Mopt = data.oMf[tool_id]
         self.assertTrue(
             (
-                np.abs(
-                    transform_target_to_world.translation - Mopt.translation
-                )
-                < 1e-7
+                np.abs(transform_target_to_world.translation - Mopt.translation) < 1e-7
             ).all()
         )
         self.assertTrue(

@@ -1,3 +1,3 @@
-Mtarget = pin.SE3(pin.utils.rotate('y', 3), np.array([-0.5, 0.1, 0.2]))  # x,y,z
-endEffectorFrameName = 'tool0'
+Mtarget = pin.SE3(pin.utils.rotate("y", 3), np.array([-0.5, 0.1, 0.2]))  # x,y,z
+endEffectorFrameName = "tool0"
 q0 = np.array([0, -3.14 / 2, 0, 0, 0, 0])

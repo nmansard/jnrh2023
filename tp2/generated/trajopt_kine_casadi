@@ -2,11 +2,15 @@
 cmodel = cpin.Model(model)
 cdata = cmodel.createData()
 
-cq = casadi.SX.sym("x",model.nq,1)
-cpin.framesForwardKinematics(cmodel,cdata,cq)
+cq = casadi.SX.sym("x", model.nq, 1)
+cpin.framesForwardKinematics(cmodel, cdata, cq)
 
-error3_tool = casadi.Function('etool3', [cq],
-                              [ cdata.oMf[endEffector_ID].translation - Mtarget.translation ])
-error6_tool = casadi.Function('etool6', [cq],
-                             [ cpin.log6(cdata.oMf[endEffector_ID].inverse() * cpin.SE3(Mtarget)).vector ])
+error3_tool = casadi.Function(
+    "etool3", [cq], [cdata.oMf[endEffector_ID].translation - Mtarget.translation]
+)
+error6_tool = casadi.Function(
+    "etool6",
+    [cq],
+    [cpin.log6(cdata.oMf[endEffector_ID].inverse() * cpin.SE3(Mtarget)).vector],
+)
 error_tool = error3_tool
