@@ -41,21 +41,25 @@ After this, you have to **choose one of the three** following supported methods:
 
 2. create an environment:
 
-    `conda create -n jnrh-2023` (TODO: `python=3.x` ?)
+    `conda create -n jnrh-2023 python=3.9`
 
 3. activate it :
 
-    `conda activate -n jnrh-2023`
+    `conda activate jnrh-2023`
 
-4. install general dependencies:
+4. add conda-forge channel:
 
-    `conda install -c conda-forge jupyterlab meshcat-python scipy ipywidgets matplotlib`
+    `conda config --add channels conda-forge`
 
 5. install specific dependencies:
 
     `conda install -c olivier.roussel hpp-fcl example-robot-data pinocchio`
 
-6. start `PYTHONPATH=. jupyter-lab`
+6. install regular dependencies:
+
+    `conda install -c conda-forge jupyterlab meshcat-python scipy ipywidgets matplotlib`
+
+7. start `PYTHONPATH=. jupyter-lab`
 
 ### docker
 
