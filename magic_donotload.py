@@ -1,8 +1,4 @@
-from IPython.core.magic import (
-    line_magic,
-    Magics,
-    magics_class,
-)
+from IPython.core.magic import Magics, line_magic, magics_class
 
 
 @magics_class

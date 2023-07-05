@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Cut python files in bits loadable by ipython."""
 
-from pathlib import Path
 import json
+from pathlib import Path
 
 hashtags = ["jupyter_snippet"]
 

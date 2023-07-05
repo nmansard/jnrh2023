@@ -1,9 +1,8 @@
+import casadi
+import example_robot_data as robex
 import numpy as np
 import pinocchio as pin
-import casadi
 from pinocchio import casadi as cpin
-import example_robot_data as robex
-
 
 # Change numerical print
 pin.SE3.__repr__ = pin.SE3.__str__

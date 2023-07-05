@@ -14,11 +14,12 @@ The following tools are used:
 
 import time
 import unittest
+
+import example_robot_data as robex
 import numpy as np
 import pinocchio as pin
-import example_robot_data as robex
-from scipy.optimize import fmin_bfgs
 from numpy.linalg import norm
+from scipy.optimize import fmin_bfgs
 
 from utils.meshcat_viewer_wrapper import MeshcatVisualizer
 

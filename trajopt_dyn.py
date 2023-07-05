@@ -22,11 +22,12 @@ The following tools are used:
 """
 
 import time
+
+import casadi
+import example_robot_data as robex
 import numpy as np
 import pinocchio as pin
-import casadi
 from pinocchio import casadi as cpin
-import example_robot_data as robex
 
 from utils.meshcat_viewer_wrapper import MeshcatVisualizer
 
