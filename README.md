@@ -35,7 +35,7 @@ After this, you have to **choose one of the three** following supported methods:
 5. start `PYTHONPATH=. jupyter-lab`
 
 
-### conda
+### conda (Linux, macOS and Windows)
 
 1. update conda:
 
@@ -52,16 +52,39 @@ After this, you have to **choose one of the three** following supported methods:
 4. add conda-forge channel:
 
     `conda config --add channels conda-forge`
+   
+    Note: If you already have the `conda-forge` channel set-up in your config, this will have no effect and you will likely get the warning message `Warning: 'conda-forge' already in 'channels' list, moving to the top`. You can simply discard it.
 
-5. install specific dependencies:
+6. install specific dependencies:
 
-    `conda install -c olivier.roussel hpp-fcl example-robot-data pinocchio`
+    `conda install -c olivier.roussel hpp-fcl example-robot-data pinocchio=2.99.0`
 
-6. install regular dependencies:
+    Note: Forcing the Pinocchio package version to `2.99.0` is not mandatory depending on your channel priority configuration, which can vary depending on your conda installation source.
+
+8. check your Pinocchio install:
+
+    `conda list`
+
+   Check for correct packages versions and source channel (4th column) in your output:
+   ```
+   example-robot-data    4.1.0     <some_hash>    olivier.roussel
+   hpp-fcl               2.99.0    <some_hash>    olivier.roussel 
+   pinocchio             2.99.0    <some_hash>    olivier.roussel
+   ```
+   If versions or source channel does not match this, then something gone wrong in your installation process.
+
+9. install regular dependencies:
 
     `conda install -c conda-forge jupyterlab meshcat-python scipy ipywidgets matplotlib`
 
-7. start `PYTHONPATH=. jupyter-lab`
+10. start JupyterLab:
+   
+    Be sure that you are still in the `jnrh2023` root directory of the repository that you cloned at the *Getting started* step.
+    #### Linux / macOS
+    `PYTHONPATH=. jupyter-lab`
+
+    #### Windows
+    `jupyter-lab`
 
 ### docker
 
